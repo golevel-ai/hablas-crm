@@ -14,3 +14,18 @@ evolution-hub
 evo-ai-docs/
 evo-crm-enterprise/
 evo-assistant/
+
+# Operational evidence and secrets stay local. Examples remain versionable.
+.playwright-mcp/
+.ops-private/
+infra/deployment-manifest.yml
+infra/**/*.env
+infra/**/env.app
+infra/**/env.data
+infra/**/env.frontend
+__pycache__/
+*.pyc
+infra/cloudflare/node_modules/
+infra/cloudflare/.wrangler/
+infra/cloudflare/.dev.vars*
+infra/tests/node_modules/

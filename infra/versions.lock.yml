@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/golevel-ai/hablas-crm.git",
+  "ref_selected": "main",
+  "commit": "fa6924df23b863de30b065d25e301bb414593bd5",
+  "submodules": {
+    "evo-ai-core-service-community": "c6f7ba319c7e44c942ac9d6a7792e19109ebd2e1",
+    "evo-ai-crm-community": "aa3d408b6e2c1033e9fea4a2222447c1826d6192",
+    "evo-ai-frontend-community": "20ba0e60e7b6d826ec3b937a0e22e901b2adca75",
+    "evo-ai-processor-community": "a8e1bd444ced0f6dc3ccb31f20416f63e7048182",
+    "evo-auth-service-community": "851073dd1e6ff0dc26e2e5bc8f54efa427ca65a4",
+    "evo-bot-runtime": "7ec7db4761ca5bc8d09e4aa036398de2821c2e71",
+    "evo-flow-community": "1734849b8afa03aceda37122a083d2fad7216098",
+    "evo-nexus": "fe15fd50fb822ca99d4e83182b244fa839a27776",
+    "evolution-api": "e273b904d53f5726970fd6a244ed9caa61dfeb9a",
+    "evolution-go": "706c9a48576428005053971bb9ea73dc34c35462",
+    "evolution-go/whatsmeow-lib": "0923702fb3fac8525241f15331b92116485d69eb"
+  },
+  "images": {},
+  "image_status": "BLOCKED_BUILD_AND_REGISTRY",
+  "target_platform": "linux/amd64",
+  "wrangler": "4.130.0",
+  "frontend": {
+    "package_manager": "npm",
+    "lockfile": "evo-ai-frontend-community/package-lock.json",
+    "upstream_docker_node_major": 20,
+    "local_node_observed": "26.7.0",
+    "local_npm_observed": "11.19.0",
+    "release_toolchain_status": "UNPINNED"
+  }
+}

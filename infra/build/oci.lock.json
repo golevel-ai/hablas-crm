@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "images": {
+    "auth_base": {
+      "source_tag": "library/ruby:3.4.4-slim",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/ruby@sha256:d0458e8d6ab08955b1420f99e8eeabb01ec5958ffad87bff1127d878baccf687",
+      "manifest_digest": "sha256:d0458e8d6ab08955b1420f99e8eeabb01ec5958ffad87bff1127d878baccf687",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "crm_node": {
+      "source_tag": "library/node:23-alpine",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/node@sha256:b9d38d589853406ff0d4364f21969840c3e0397087643aef8eede40edbb6c7cd",
+      "manifest_digest": "sha256:b9d38d589853406ff0d4364f21969840c3e0397087643aef8eede40edbb6c7cd",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "crm_ruby": {
+      "source_tag": "library/ruby:3.4.4-alpine3.21",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/ruby@sha256:bf74912af8989a3ca3f353123b5db2424cd77af809cc500c2e0d93aec602c77f",
+      "manifest_digest": "sha256:bf74912af8989a3ca3f353123b5db2424cd77af809cc500c2e0d93aec602c77f",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "core_go": {
+      "source_tag": "library/golang:1.24.4-alpine",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/golang@sha256:e5c2e59960f8636d02f77029c8f0a7a6b882f87fee8d2e4a9ce6c9ff112ed735",
+      "manifest_digest": "sha256:e5c2e59960f8636d02f77029c8f0a7a6b882f87fee8d2e4a9ce6c9ff112ed735",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "alpine": {
+      "source_tag": "library/alpine:3.20",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/alpine@sha256:c64c687cbea9300178b30c95835354e34c4e4febc4badfe27102879de0483b5e",
+      "manifest_digest": "sha256:c64c687cbea9300178b30c95835354e34c4e4febc4badfe27102879de0483b5e",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "processor_python": {
+      "source_tag": "library/python:3.11-slim",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/python@sha256:d1053354624536b044162aaab1e418bd000ea35184fb1ae098ab3166b1072e72",
+      "manifest_digest": "sha256:d1053354624536b044162aaab1e418bd000ea35184fb1ae098ab3166b1072e72",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "bot_go": {
+      "source_tag": "library/golang:1.24-alpine",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/golang@sha256:757779acac4af1b349a20f357c7296097b4a0b89da4ad0e370b339060077282a",
+      "manifest_digest": "sha256:757779acac4af1b349a20f357c7296097b4a0b89da4ad0e370b339060077282a",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "flow_node": {
+      "source_tag": "library/node:20-slim",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/node@sha256:3d0f05455dea2c82e2f76e7e2543964c30f6b7d673fc1a83286736d44fe4c41c",
+      "manifest_digest": "sha256:3d0f05455dea2c82e2f76e7e2543964c30f6b7d673fc1a83286736d44fe4c41c",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "gateway_nginx": {
+      "source_tag": "library/nginx:1.28-alpine",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/nginx@sha256:0dcc88822d45581e65ae329f8be769762bf628d3b2bb7d2a077d4aa5c98b30e3",
+      "manifest_digest": "sha256:0dcc88822d45581e65ae329f8be769762bf628d3b2bb7d2a077d4aa5c98b30e3",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "redis": {
+      "source_tag": "library/redis:7.4-alpine",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/redis@sha256:1db42ccef14898aa29bae778452d567534b59c107129cbc1163fb552de184d3c",
+      "manifest_digest": "sha256:1db42ccef14898aa29bae778452d567534b59c107129cbc1163fb552de184d3c",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "rabbitmq": {
+      "source_tag": "library/rabbitmq:3.13-alpine",
+      "platform": "linux/amd64",
+      "reference": "docker.io/library/rabbitmq@sha256:85908ad0de1dc0668114e9549c4a0ade7af92351c7b0e5608bdcc1e016fe1d26",
+      "manifest_digest": "sha256:85908ad0de1dc0668114e9549c4a0ade7af92351c7b0e5608bdcc1e016fe1d26",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    },
+    "clickhouse": {
+      "source_tag": "clickhouse/clickhouse-server:25.8-alpine",
+      "platform": "linux/amd64",
+      "reference": "docker.io/clickhouse/clickhouse-server@sha256:07c3dac14693962503aec9fd466f9a0c195af364ce447667a7c2b49c8e630327",
+      "manifest_digest": "sha256:07c3dac14693962503aec9fd466f9a0c195af364ce447667a7c2b49c8e630327",
+      "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
+    }
+  }
+}

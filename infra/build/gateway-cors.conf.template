@@ -1,0 +1,12 @@
+# Exact origins only. No parent-domain or wildcard CORS allowance.
+map $http_origin $hablas_cors_origin {
+    default "";
+    "${FRONTEND_ORIGIN}" $http_origin;
+    "${API_ORIGIN}" $http_origin;
+}
+map $http_origin $hablas_origin_denied {
+    default 1;
+    "" 0;
+    "${FRONTEND_ORIGIN}" 0;
+    "${API_ORIGIN}" 0;
+}

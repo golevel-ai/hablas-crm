@@ -1,0 +1,133 @@
+name: Build isolated staging images
+
+on:
+  push:
+    branches: [infra/staging-deployment]
+    paths:
+      - infra/build/**
+      - infra/tests/**
+      - infra/versions.lock.yml
+      - scripts/ops/**
+      - .github/workflows/build-staging.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hablas-evo-staging-release-build
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.repository == 'golevel-ai/hablas-crm' && github.ref == 'refs/heads/infra/staging-deployment'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20.20.0
+      - name: Validate deployment policy and source identity
+        run: |
+          python3 -m unittest discover -s scripts/ops -p 'test_*.py' -v
+          bash scripts/ops/validate.sh --target infra/environment.target.yml
+          docker compose -f infra/coolify/compose.app.yml config --no-interpolate --quiet
+          docker compose -f infra/coolify/compose.data.yml config --no-interpolate --quiet
+          node --test scripts/ops/test_tls.cjs
+      - name: Prepare immutable EvoFlow source context
+        id: context
+        run: |
+          python3 scripts/ops/prepare_builds.py --target infra/environment.target.yml --service evoflow
+          RECIPE=$(python3 -c "import sys; sys.path.insert(0, 'scripts/ops'); from prepare_builds import recipe_digest; print(recipe_digest())")
+          echo "directory=.ops-private/build/$RECIPE/evoflow" >> "$GITHUB_OUTPUT"
+      - name: Build EvoFlow with locked dependencies
+        working-directory: ${{ steps.context.outputs.directory }}
+        run: npm ci --ignore-scripts --no-audit --no-fund && npm run build
+      - name: Prepare disposable local PostgreSQL test tools
+        working-directory: infra/tests
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Restore reviewed native library symlinks
+        working-directory: infra/tests/node_modules/@embedded-postgres/linux-x64
+        run: node scripts/hydrate-symlinks.js
+      - name: Test schema migrations and cross-schema denial locally
+        run: node infra/tests/evoflow-schema.mjs "${{ steps.context.outputs.directory }}"
+
+  images:
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        service: [gateway, auth, crm, core, processor, bot, evoflow]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - name: Generate versioned deployment context
+        id: context
+        env:
+          SERVICE: ${{ matrix.service }}
+        run: |
+          python3 scripts/ops/prepare_builds.py --target infra/environment.target.yml --service "$SERVICE"
+          RECIPE=$(python3 -c "import sys; sys.path.insert(0, 'scripts/ops'); from prepare_builds import recipe_digest; print(recipe_digest())")
+          DOCKERFILE=$(python3 -c "import os,sys; sys.path.insert(0, 'scripts/ops'); from prepare_builds import RECIPES; print(RECIPES[os.environ['SERVICE']][1])")
+          echo "directory=.ops-private/build/$RECIPE/$SERVICE" >> "$GITHUB_OUTPUT"
+          echo "dockerfile=.ops-private/build/$RECIPE/$SERVICE/$DOCKERFILE" >> "$GITHUB_OUTPUT"
+          echo "recipe=$RECIPE" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish only this release tag
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: ${{ steps.context.outputs.directory }}
+          file: ${{ steps.context.outputs.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/golevel-ai/hablas-evo-staging-${{ matrix.service }}:${{ github.sha }}
+          provenance: mode=max
+          build-args: |
+            RAILS_ENV=production
+            GIT_SHA=${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/golevel-ai/hablas-crm
+            org.opencontainers.image.revision=${{ github.sha }}
+            io.golevel.project=hablas-evo-infra
+            io.golevel.recipe=${{ steps.context.outputs.recipe }}
+      - name: Record the returned image digest
+        env:
+          SERVICE: ${{ matrix.service }}
+          DIGEST: ${{ steps.build.outputs.digest }}
+          RECIPE: ${{ steps.context.outputs.recipe }}
+        run: |
+          python3 - <<'PY'
+          import json, os, re
+          from pathlib import Path
+          assert re.fullmatch(r'sha256:[a-f0-9]{64}', os.environ['DIGEST'])
+          service = os.environ['SERVICE']
+          source = json.loads(Path(f".ops-private/build/{os.environ['RECIPE']}/{service}/hablas-build.json").read_text())
+          source.pop('files_sha256')
+          source['reference'] = f"ghcr.io/golevel-ai/hablas-evo-staging-{service}@{os.environ['DIGEST']}"
+          Path(f'image-{service}.json').write_text(json.dumps(source, indent=2) + '\n')
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: image-${{ matrix.service }}
+          path: image-${{ matrix.service }}.json
+          retention-days: 7

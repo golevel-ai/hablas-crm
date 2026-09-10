@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "project": "hablas-evo-infra",
+  "environment": "staging",
+  "ownership_marker": null,
+  "status": "NOT_DEPLOYED",
+  "release_lock": "infra/versions.lock.yml",
+  "coolify": {
+    "server_uuid": "hwt9rmdg9rrodfb9hilh8vcn",
+    "project_uuid": null,
+    "environment_uuid": null,
+    "app_uuid": null,
+    "data_uuid": null,
+    "networks": [],
+    "internal_dns": {},
+    "volumes": []
+  },
+  "cloudflare": {
+    "account_id": "85354ee4fc8d1c079a66f6321a5c78c5",
+    "zone_id": "b0a4153d93f81cd7957e34cdfcd11e60",
+    "worker_name": null,
+    "worker_version_id": null,
+    "frontend_host": null,
+    "api_host": null,
+    "dns_record_ids": [],
+    "r2_bucket": null,
+    "hostname_rule_ids": []
+  },
+  "supabase": {"status": "PENDING_OWNER_INPUT", "projects": []},
+  "secret_refs": [],
+  "evidence": {
+    "domain_inventory": null,
+    "capacity_review": null,
+    "database_validation": null,
+    "backup_restore": null
+  }
+}

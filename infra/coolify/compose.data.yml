@@ -1,0 +1,107 @@
+# PREPARATION ONLY. No resources exist yet. Resolve digests and capacity before use.
+# Coolify Compose source of truth; no ports, external volumes or Swarm labels.
+name: hablas-evo-data-staging
+x-common: &common
+  platform: linux/amd64
+  restart: "on-failure:3"
+  stop_grace_period: 60s
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  labels:
+    io.golevel.project: hablas-evo-infra
+    io.golevel.environment: staging
+    io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}
+
+services:
+  hablas-evo-staging-redis:
+    <<: *common
+    image: ${REDIS_IMAGE:?Use verified image@sha256 digest}
+    mem_limit: 512m
+    cpus: 0.25
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?Dedicated credential required}
+    command: ["sh", "-ec", 'exec redis-server /usr/local/etc/redis/redis.conf --requirepass "$${REDIS_PASSWORD}"']
+    configs:
+      - source: redis-config
+        target: /usr/local/etc/redis/redis.conf
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", 'REDISCLI_AUTH="$${REDIS_PASSWORD}" redis-cli ping | grep -qx PONG']
+      interval: 20s
+      timeout: 5s
+      retries: 3
+
+  hablas-evo-staging-rabbitmq:
+    <<: *common
+    image: ${RABBITMQ_IMAGE:?Use verified image@sha256 digest}
+    hostname: hablas-evo-staging-rabbitmq
+    mem_limit: 512m
+    cpus: 0.25
+    environment:
+      RABBITMQ_NODENAME: rabbit@hablas-evo-staging-rabbitmq
+      RABBITMQ_DEFAULT_USER: hablas-evo-staging
+      RABBITMQ_DEFAULT_VHOST: hablas-evo-staging
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Dedicated credential required}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:?Stable recovery secret required}
+    configs:
+      - source: rabbitmq-config
+        target: /etc/rabbitmq/rabbitmq.conf
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  hablas-evo-staging-clickhouse:
+    <<: *common
+    image: ${CLICKHOUSE_IMAGE:?Use verified image@sha256 digest}
+    mem_limit: 1536m
+    cpus: 0.5
+    environment:
+      CLICKHOUSE_DB: hablas_evo_staging
+      CLICKHOUSE_USER: hablas_evo_staging
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Dedicated credential required}
+    configs:
+      - source: clickhouse-config
+        target: /etc/clickhouse-server/config.d/hablas-evo.xml
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD-SHELL", 'clickhouse-client --user "$${CLICKHOUSE_USER}" --password "$${CLICKHOUSE_PASSWORD}" --query "SELECT 1" >/dev/null']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+configs:
+  redis-config:
+    file: ../redis/redis.conf
+  rabbitmq-config:
+    file: ../rabbitmq/rabbitmq.conf
+  clickhouse-config:
+    file: ../clickhouse/config-overrides.xml
+
+volumes:
+  redis-data:
+    name: hablas-evo-staging-redis
+    labels:
+      io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}
+  rabbitmq-data:
+    name: hablas-evo-staging-rabbitmq
+    labels:
+      io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}
+  clickhouse-data:
+    name: hablas-evo-staging-clickhouse
+    labels:
+      io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}

@@ -1,0 +1,79 @@
+{
+  "project": "hablas-evo-infra",
+  "environment": "staging",
+  "coolify": {
+    "url": "https://my.golevel.ai/",
+    "server_name": "VPS-US-VA-002-OP",
+    "expected_server_ip": "51.81.80.55",
+    "server_uuid": "hwt9rmdg9rrodfb9hilh8vcn",
+    "project_uuid": "jjxcrsedavkskvcbnuvmkaql",
+    "environment_uuid": "xukzvsnkjemq085zitdzzytf",
+    "metadata_status": "STAGING_EMPTY_CREATED",
+    "identity_status": "VERIFIED",
+    "version_observed": "4.3.18"
+  },
+  "cloudflare": {
+    "organization_name": "GoLevel",
+    "account_id": "85354ee4fc8d1c079a66f6321a5c78c5",
+    "zone_name": "hablas.chat",
+    "zone_id": "b0a4153d93f81cd7957e34cdfcd11e60",
+    "identity_status": "VERIFIED",
+    "frontend_candidate": "evo-stg.hablas.chat",
+    "api_candidate": "evo-api-stg.hablas.chat",
+    "frontend_customer_host_requested": "crm.hablas.chat",
+    "frontend_customer_host_status": "OWNER_REQUESTED_EXISTING_CNAME_REVIEW_REQUIRED",
+    "frontend_host": null,
+    "api_host": null,
+    "host_allocation_status": "REVIEW_REQUIRED"
+  },
+  "supabase": {
+    "status": "PRIMARY_BOOTSTRAP_PENDING",
+    "project_ref_owner_provided": "fizdiennudpyqrzmdukm",
+    "project_identity_status": "VERIFIED_PROJECT_URL_AND_DASHBOARD",
+    "project_name": "hablas-crm",
+    "organization_name": "Hablas",
+    "organization_id": "hnaujighizgevlmtkycw",
+    "region": "us-east-1",
+    "postgres_version_observed": "17.6",
+    "vector_version_available": "0.8.2",
+    "vector_installed": false,
+    "public_tables_observed": 0,
+    "isolation_decision": "OWNER_APPROVED_SINGLE_PROJECT_SEPARATE_SCHEMAS",
+    "main_schema": "public",
+    "evoflow_schema": "hablas_evoflow_staging",
+    "evoflow_schema_status": "MIGRATED_RUNTIME_VERIFIED",
+    "evoflow_schema_oid": 17494,
+    "main_connection": {
+      "mode": "session",
+      "host": "aws-0-us-east-1.pooler.supabase.com",
+      "port": 5432,
+      "database": "postgres",
+      "admin_username": "postgres.fizdiennudpyqrzmdukm",
+      "runtime_username": null,
+      "status": "ADMIN_LOGIN_TLS_VERIFIED_RUNTIME_ROLE_PENDING"
+    },
+    "direct_connection": {
+      "host": "db.fizdiennudpyqrzmdukm.supabase.co",
+      "port": 5432,
+      "database": "postgres",
+      "admin_username": "postgres"
+    },
+    "mcp_mode": "read_only",
+    "mcp_status": "AUTHENTICATED_METADATA_READ_VERIFIED",
+    "connection_secret_refs": ["local-file:.ops-private/secrets/fizdiennudpyqrzmdukm-admin.password"]
+  },
+  "verification": {
+    "observed_at": "2026-09-10T01:30:00Z",
+    "method": "authenticated_browser_and_coolify_terminal_read_only",
+    "baseline": "docs/existing-environment-baseline.md",
+    "revalidate_before_every_remote_write": true
+  },
+  "safety": {
+    "existing_system_must_remain_unchanged": true,
+    "allow_existing_dns_update": false,
+    "allow_zone_wide_change": false,
+    "allow_existing_application_change": false,
+    "allow_paid_resource_creation": false,
+    "allow_production_cutover": false
+  }
+}

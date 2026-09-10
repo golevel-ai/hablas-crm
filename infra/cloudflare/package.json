@@ -1,0 +1,10 @@
+{
+  "name": "hablas-evo-cloudflare-infra",
+  "private": true,
+  "scripts": {
+    "validate:wrangler": "wrangler deploy --dry-run --config wrangler.jsonc"
+  },
+  "devDependencies": {
+    "wrangler": "4.130.0"
+  }
+}

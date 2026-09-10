@@ -1,0 +1,12 @@
+{
+  "name": "hablas-evo-frontend-staging",
+  "account_id": "85354ee4fc8d1c079a66f6321a5c78c5",
+  "compatibility_date": "2026-09-09",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [],
+  "assets": {
+    "directory": "../../evo-ai-frontend-community/dist",
+    "not_found_handling": "single-page-application"
+  }
+}
