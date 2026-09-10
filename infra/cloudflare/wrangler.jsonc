@@ -1,12 +1,28 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "hablas-evo-frontend-staging",
   "account_id": "85354ee4fc8d1c079a66f6321a5c78c5",
-  "compatibility_date": "2026-09-09",
+  "main": "./worker.mjs",
+  "compatibility_date": "2026-09-10",
+  "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
   "routes": [],
+  "env": {
+    "production": {
+      "name": "hablas-evo-frontend-production",
+      "routes": []
+    }
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {"head_sampling_rate": 1},
+    "traces": {"enabled": true, "head_sampling_rate": 0.01}
+  },
   "assets": {
     "directory": "../../evo-ai-frontend-community/dist",
-    "not_found_handling": "single-page-application"
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
   }
 }

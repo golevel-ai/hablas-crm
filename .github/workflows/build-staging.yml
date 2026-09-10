@@ -10,8 +10,19 @@ on:
       - infra/redis/**
       - infra/rabbitmq/**
       - infra/clickhouse/**
+      - infra/cloudflare/**
+      - infra/environment.target.yml
       - infra/versions.lock.yml
       - scripts/ops/**
+      - evo-auth-service-community
+      - evo-ai-crm-community
+      - evo-ai-core-service-community
+      - evo-ai-processor-community
+      - evo-bot-runtime
+      - evo-flow-community
+      - evo-ai-frontend-community
+      - nginx/**
+      - .gitmodules
       - .github/workflows/build-staging.yml
   workflow_dispatch:
 
@@ -29,6 +40,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       build_images: ${{ steps.plan.outputs.build_images }}
+      remote_writes_authorized: ${{ steps.plan.outputs.remote_writes_authorized }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -47,6 +59,12 @@ jobs:
           sys.path.insert(0, 'scripts/ops')
           from prepare_builds import RECIPES, recipe_digest
           lock = json.loads(Path('infra/versions.lock.yml').read_text())
+          target = json.loads(Path('infra/environment.target.yml').read_text())
+          cutover = target.get('cutover', {})
+          remote_writes_authorized = (
+              cutover.get('remote_changes_authorized') is True
+              and cutover.get('execution_authorization') != 'GATE_A_LOCAL_ONLY'
+          )
           recipe = recipe_digest()
           needed = lock.get('release', {}).get('recipe_sha256') != recipe
           for service, (source, _) in RECIPES.items():
@@ -55,7 +73,8 @@ jobs:
               needed |= image.get('source_commit') != commit or image.get('recipe_sha256') != recipe
               needed |= image.get('verification') != 'ANONYMOUS_PULL_AND_DIGEST_VERIFIED'
           with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
-              out.write(f"build_images={'true' if needed else 'false'}\n")
+              out.write(f"remote_writes_authorized={'true' if remote_writes_authorized else 'false'}\n")
+              out.write(f"build_images={'true' if needed and remote_writes_authorized else 'false'}\n")
           PY
       - name: Validate deployment policy and source identity
         run: |
@@ -71,6 +90,60 @@ jobs:
           python3 -m py_compile scripts/ops/rotate_data_credentials_host.py scripts/ops/smoke_r2.py
           node --check scripts/ops/verify_main.cjs
           python3 -m py_compile scripts/ops/bootstrap_main_host.py scripts/ops/bootstrap_processor_alembic.py scripts/ops/bootstrap_processor.py
+          node --test infra/cloudflare/worker.test.mjs
+      - name: Verify Gate A deployment transformations
+        run: |
+          python3 scripts/ops/prepare_builds.py --target infra/environment.target.yml --service auth
+          python3 scripts/ops/prepare_builds.py --target infra/environment.target.yml --service gateway
+          RECIPE=$(python3 -c "import sys; sys.path.insert(0, 'scripts/ops'); from prepare_builds import recipe_digest; print(recipe_digest())")
+          python3 scripts/ops/verify_gate_a.py \
+            --context-root ".ops-private/build/$RECIPE" \
+            --compose infra/coolify/compose.app.yml
+      - name: Build and scan frontend with Node 20
+        env:
+          VITE_APP_ENV: staging
+          VITE_API_URL: https://evo-api-stg.hablas.chat
+          VITE_AUTH_API_URL: https://evo-api-stg.hablas.chat
+          VITE_EVOAI_API_URL: https://evo-api-stg.hablas.chat
+          VITE_AGENT_PROCESSOR_URL: https://evo-api-stg.hablas.chat
+          VITE_WS_URL: https://evo-api-stg.hablas.chat
+          VITE_EVOFLOW_API_URL: https://evo-api-stg.hablas.chat
+          VITE_CAMPAIGN_API_URL: https://evo-api-stg.hablas.chat
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund --prefix evo-ai-frontend-community
+          npm run build --prefix evo-ai-frontend-community
+          if grep -R -E -l 'VITE_[A-Z_]+_PLACEHOLDER|api\.build\.invalid|localhost:[0-9]+/api/' evo-ai-frontend-community/dist; then
+            echo 'Frontend bundle contains a release placeholder or active localhost API URL.' >&2
+            exit 1
+          fi
+          python3 scripts/ops/hash_tree.py \
+            --root evo-ai-frontend-community/dist \
+            --file worker.mjs=infra/cloudflare/worker.mjs \
+            --file wrangler.jsonc=infra/cloudflare/wrangler.jsonc \
+            --output .ops-private/frontend-dist-manifest.json
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22.19.0
+      - name: Validate frontend Worker with Wrangler-supported Node
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund --prefix infra/cloudflare
+          npm run validate:wrangler --prefix infra/cloudflare
+      - name: Upload immutable frontend artifact
+        if: steps.plan.outputs.remote_writes_authorized == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: hablas-evo-frontend-${{ github.sha }}
+          path: |
+            evo-ai-frontend-community/dist
+            infra/cloudflare/worker.mjs
+            infra/cloudflare/wrangler.jsonc
+            .ops-private/frontend-dist-manifest.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20.20.0
       - name: Prepare immutable EvoFlow source context
         id: context
         run: |
@@ -91,7 +164,7 @@ jobs:
 
   images:
     needs: verify
-    if: needs.verify.outputs.build_images == 'true'
+    if: needs.verify.outputs.remote_writes_authorized == 'true' && needs.verify.outputs.build_images == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:

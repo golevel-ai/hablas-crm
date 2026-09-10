@@ -2,7 +2,8 @@
   "name": "hablas-evo-cloudflare-infra",
   "private": true,
   "scripts": {
-    "validate:wrangler": "wrangler deploy --dry-run --config wrangler.jsonc"
+    "test": "node --test worker.test.mjs",
+    "validate:wrangler": "npm test && wrangler deploy --dry-run --env=\"\" --config wrangler.jsonc && wrangler deploy --dry-run --env production --config wrangler.jsonc"
   },
   "devDependencies": {
     "wrangler": "4.130.0"

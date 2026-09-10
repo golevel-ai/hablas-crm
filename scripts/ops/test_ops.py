@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 import ops
+import verify_gate_a
 
 
 class PolicyTests(unittest.TestCase):
@@ -42,6 +43,33 @@ class PolicyTests(unittest.TestCase):
             with self.assertRaises(ops.Blocked):
                 ops.validate_target(target)
 
+    def test_remote_cutover_authorization_is_enforced(self):
+        for value in (False, "true", 1, None):
+            target = copy.deepcopy(self.target)
+            target["cutover"]["remote_changes_authorized"] = value
+            with self.assertRaises(ops.Blocked):
+                ops.validate_target(target)
+
+    def test_cloudflare_evidence_metadata_is_enforced(self):
+        for key in (
+            "frontend_customer_host_status",
+            "api_customer_host_status",
+            "availability_method",
+            "host_allocation_status",
+        ):
+            with self.subTest(key=key):
+                target = copy.deepcopy(self.target)
+                target["cloudflare"][key] = "wrong-state"
+                with self.assertRaises(ops.Blocked):
+                    ops.validate_target(target)
+
+        for value in (None, "not-a-time", "2999-01-01T00:00:00Z"):
+            with self.subTest(timestamp=value):
+                target = copy.deepcopy(self.target)
+                target["cloudflare"]["availability_observed_at"] = value
+                with self.assertRaises(ops.Blocked):
+                    ops.validate_target(target)
+
     def test_apex_existing_and_wildcard_hosts_rejected(self):
         for host in ("hablas.chat", "www.hablas.chat", "evo.hablas.chat",
                      "*.hablas.chat", "evo-stg.hablas.chat.evil.test"):
@@ -71,6 +99,52 @@ class PolicyTests(unittest.TestCase):
         result = subprocess.run(["python3", str(Path(ops.__file__)), "preflight"],
                                 capture_output=True, timeout=10)
         self.assertEqual(result.returncode, 2)
+
+    def test_gate_a_rejects_equivalent_broad_auth_locations(self):
+        for location in (
+            "location /auth {",
+            "location ^~ /auth/ {",
+            "location ~ ^/auth(?:/|$) {",
+            "location ~* ^/auth/ {",
+        ):
+            with self.subTest(location=location):
+                self.assertTrue(verify_gate_a.has_broad_auth_location(location))
+        self.assertFalse(verify_gate_a.has_broad_auth_location(
+            "location ~ ^/api/v1/auth(?:/|$) {"
+        ))
+
+    def test_gate_a_requires_one_explicit_true_force_ssl(self):
+        self.assertTrue(verify_gate_a.compose_forces_ssl('  FORCE_SSL: "true"\n'))
+        for value in ('false', '"false"', '0', 'off', '${FORCE_SSL:-false}', ''):
+            with self.subTest(value=value):
+                self.assertFalse(verify_gate_a.compose_forces_ssl(
+                    f"  FORCE_SSL: {value}\n"
+                ))
+
+    def test_gate_a_requires_fail_closed_rails_ssl_assignment(self):
+        secure = "\n".join((
+            "ssl_enforced = ActiveModel::Type::Boolean.new.cast(ENV.fetch('FORCE_SSL', 'true'))",
+            "config.assume_ssl = ssl_enforced",
+            "config.force_ssl = ssl_enforced",
+        ))
+        self.assertTrue(verify_gate_a.production_enforces_ssl(secure))
+        self.assertFalse(verify_gate_a.production_enforces_ssl(
+            secure.replace(
+                "ssl_enforced = ActiveModel::Type::Boolean.new.cast(ENV.fetch('FORCE_SSL', 'true'))",
+                "ssl_enforced = false",
+            )
+        ))
+
+    def test_ci_remote_writes_are_policy_gated(self):
+        workflow = (ops.ROOT / ".github/workflows/build-staging.yml").read_text()
+        self.assertIn("- infra/environment.target.yml", workflow)
+        self.assertIn("remote_writes_authorized={'true' if remote_writes_authorized else 'false'}", workflow)
+        self.assertIn("if: steps.plan.outputs.remote_writes_authorized == 'true'", workflow)
+        self.assertIn(
+            "if: needs.verify.outputs.remote_writes_authorized == 'true' && "
+            "needs.verify.outputs.build_images == 'true'",
+            workflow,
+        )
 
 
 class InventoryTests(unittest.TestCase):
@@ -131,6 +205,32 @@ class InventoryTests(unittest.TestCase):
         ]), patch.object(client, "collection", side_effect=AssertionError("wrong account")):
             with self.assertRaisesRegex(ops.Blocked, "account mismatch"):
                 ops.inventory_domains(target, client)
+
+    def test_inventory_includes_final_customer_hosts(self):
+        target = ops.load(ops.ROOT / "infra/environment.target.yml")
+        account_id = target["cloudflare"]["account_id"]
+        zone_id = target["cloudflare"]["zone_id"]
+        client = self.client()
+
+        def collection(path, _per_page):
+            if path.endswith("/dns_records"):
+                return [{"id": "final-api-record", "name": "api-crm.hablas.chat"}]
+            if path.endswith("/workers/scripts"):
+                return [{"id": "hablas-evo-frontend-production"}]
+            return []
+
+        with patch.object(client, "get", side_effect=[
+            {"result": {"id": account_id, "name": "GoLevel"}},
+            {"result": {"id": zone_id, "name": "hablas.chat",
+                        "account": {"id": account_id}, "status": "active"}},
+            {"result": {"value": "full"}},
+        ]), patch.object(client, "collection", side_effect=collection):
+            result = ops.inventory_domains(target, client)
+
+        self.assertIn({"kind": "dns", "id": "final-api-record",
+                       "host": "api-crm.hablas.chat"}, result["conflicts"])
+        self.assertTrue(result["worker_name_collision"])
+        self.assertEqual(result["worker_name_collisions"], ["hablas-evo-frontend-production"])
 
 
 if __name__ == "__main__":

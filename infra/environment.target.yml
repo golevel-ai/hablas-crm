@@ -23,10 +23,20 @@
     "frontend_candidate": "evo-stg.hablas.chat",
     "api_candidate": "evo-api-stg.hablas.chat",
     "frontend_customer_host_requested": "crm.hablas.chat",
-    "frontend_customer_host_status": "OWNER_REQUESTED_EXISTING_CNAME_REVIEW_REQUIRED",
+    "frontend_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "api_customer_host_requested": "api-crm.hablas.chat",
+    "api_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "availability_observed_at": "2026-09-10T17:37:35Z",
+    "availability_method": "AUTHENTICATED_CLOUDFLARE_API_AND_PUBLIC_DNS",
     "frontend_host": null,
     "api_host": null,
-    "host_allocation_status": "REVIEW_REQUIRED"
+    "host_allocation_status": "AUTHORIZED_PENDING_WRITE"
+  },
+  "cutover": {
+    "data_migration": "OWNER_CONFIRMED_FRESH_START",
+    "execution_authorization": "FULL_STAGING_AND_FINAL_DEPLOYMENT_AUTHORIZED",
+    "remote_changes_authorized": true,
+    "gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED"
   },
   "supabase": {
     "status": "VALIDATED",
@@ -81,6 +91,6 @@
     "allow_zone_wide_change": false,
     "allow_existing_application_change": false,
     "allow_paid_resource_creation": false,
-    "allow_production_cutover": false
+    "allow_production_cutover": true
   }
 }

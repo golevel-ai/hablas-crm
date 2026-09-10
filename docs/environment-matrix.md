@@ -17,7 +17,7 @@ são runtime, salvo as linhas VITE. Fonte: arquivos nos commits de versions.lock
 | DB_CONN_MAX_LIFETIME/DB_CONN_MAX_IDLE_TIME | Core | Orçamento | Não | Proposta 1h/30m |
 | POSTGRES_CONNECTION_STRING | Processor | Sim; principal Supabase | Sim | Nenhuma; percent-encoding e TLS |
 | POSTGRES_DB_HOST/PORT/USERNAME/PASSWORD/DATABASE | EvoFlow | Sim; banco dedicado validado | PASSWORD sim | Nenhuma |
-| POSTGRES_SSLMODE | EvoFlow | TLS, configuração a corrigir | Não | Sem valor seguro suportado atualmente |
+| POSTGRES_SSLMODE, PGSSLROOTCERT | EvoFlow | TLS obrigatório no overlay validado | Não | verify-full; CA Supabase montada |
 | SECRET_KEY_BASE | Rails e consumidores existentes | Sim; cofre, gerar uma vez | Sim | Sem default |
 | JWT_SECRET_KEY | Auth/CRM/Core/Processor | Sim; mesma assinatura compatível | Sim | Sem default; impedir fallback aleatório Processor |
 | DOORKEEPER_JWT_SECRET_KEY/ALGORITHM/ISS | Auth/Sidekiq Auth | OAuth compatível com código | Chave sim | Sem chave default |
@@ -48,7 +48,8 @@ são runtime, salvo as linhas VITE. Fonte: arquivos nos commits de versions.lock
 | SMTP_*, MAILER_SENDER_EMAIL | Auth/CRM conforme config | Necessária para e-mail | PASSWORD sim | Desabilitado até credencial/destinatário autorizado |
 | VITE_APP_ENV | Frontend build | Sim | Pública | staging |
 | VITE_API_URL/AUTH_API_URL/EVOAI_API_URL/AGENT_PROCESSOR_URL/WS_URL | Frontend build | Sim; host gateway | Pública | Origin base; cliente anexa caminhos/WS |
-| VITE_EVOFLOW_API_URL | Frontend build | Sim; campanhas | Pública | Pendente rota de gateway; não apontar indiscriminadamente ao CRM |
+| VITE_EVOFLOW_API_URL | Frontend build | Sim; campanhas | Pública | Rota de gateway injetada no build; comprovar no digest implantado |
+| VITE_CAMPAIGN_API_URL | Frontend build | Sim; triggers de jornada | Pública | Origin base da API; fallback localhost é proibido em release |
 
 Esta matriz é o recorte operacional auditado, não catálogo exaustivo do produto.
 Processor CORS está hardcoded `*` em src/main.py; CORS_ORIGINS não o corrige.

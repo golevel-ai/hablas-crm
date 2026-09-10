@@ -6,7 +6,7 @@ Exit 0: requested local checks passed; 1: failure; 2: blocked/invalid invocation
 """
 
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import fnmatch
 import json
 import os
@@ -29,9 +29,18 @@ EXPECTED = {
     "cloudflare.account_id": "85354ee4fc8d1c079a66f6321a5c78c5",
     "cloudflare.zone_name": "hablas.chat",
     "cloudflare.zone_id": "b0a4153d93f81cd7957e34cdfcd11e60",
+    "cloudflare.frontend_customer_host_requested": "crm.hablas.chat",
+    "cloudflare.frontend_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "cloudflare.api_customer_host_requested": "api-crm.hablas.chat",
+    "cloudflare.api_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "cloudflare.availability_method": "AUTHENTICATED_CLOUDFLARE_API_AND_PUBLIC_DNS",
+    "cloudflare.host_allocation_status": "AUTHORIZED_PENDING_WRITE",
     "supabase.organization_id": "hnaujighizgevlmtkycw",
     "supabase.project_ref_owner_provided": "znxlfqctnezrropcbftw",
     "supabase.project_name": "hablas-evo-staging",
+    "cutover.data_migration": "OWNER_CONFIRMED_FRESH_START",
+    "cutover.execution_authorization": "FULL_STAGING_AND_FINAL_DEPLOYMENT_AUTHORIZED",
+    "cutover.gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED",
 }
 SAFETY = {
     "existing_system_must_remain_unchanged": True,
@@ -39,7 +48,7 @@ SAFETY = {
     "allow_zone_wide_change": False,
     "allow_existing_application_change": False,
     "allow_paid_resource_creation": False,
-    "allow_production_cutover": False,
+    "allow_production_cutover": True,
 }
 
 
@@ -78,6 +87,16 @@ def validate_target(target):
     for key, expected in SAFETY.items():
         if field(target, "safety." + key) is not expected:
             raise Blocked("Safety policy mismatch: " + key)
+    if field(target, "cutover.remote_changes_authorized") is not True:
+        raise Blocked("Full staging and final deployment authorization is required")
+    try:
+        observed_at = datetime.fromisoformat(
+            field(target, "cloudflare.availability_observed_at").replace("Z", "+00:00")
+        )
+    except (AttributeError, ValueError):
+        raise Blocked("Cloudflare availability timestamp must be ISO-8601") from None
+    if observed_at.tzinfo is None or observed_at > datetime.now(timezone.utc) + timedelta(minutes=5):
+        raise Blocked("Cloudflare availability timestamp is naive or in the future")
     cf = target["cloudflare"]
     hosts = [cf.get("frontend_candidate"), cf.get("api_candidate")]
     for host in hosts:
@@ -139,13 +158,18 @@ def preflight(target, stage):
         reasons.append("Supabase " + target["supabase"]["status"] + "; no connection or fallback attempted")
     if target["cloudflare"]["host_allocation_status"] != "VALIDATED":
         reasons.append("Domain allocation requires complete authenticated review")
+    observed_at = datetime.fromisoformat(
+        target["cloudflare"]["availability_observed_at"].replace("Z", "+00:00")
+    )
+    if datetime.now(timezone.utc) - observed_at.astimezone(timezone.utc) > timedelta(hours=1):
+        reasons.append("Cloudflare host inventory is older than one hour")
     if not all(target["cloudflare"].get(k) for k in ("frontend_host", "api_host")):
         reasons.append("Validated hostnames absent")
     # These are known unresolved requirements, not switchable approval booleans.
     reasons.extend([
-        "Release images/digests and backend runtime tests outstanding",
-        "Database TLS/bootstrap, Processor boot DDL and gateway contracts outstanding",
-        "Provisioning/migration executor and ownership reconciliation not implemented yet",
+        "Release images for the current recipe and backend container tests outstanding",
+        "Application deploy, restore drill, SMTP and synthetic integrations outstanding",
+        "Fresh-start setup and ownership acceptance not executed",
     ])
     raise Blocked("; ".join(reasons))
 
@@ -256,7 +280,12 @@ def inventory_domains(target, client):
     }
     collections = {key: client.collection(path, 10 if key == "pages" else 50)
                    for key, path in paths.items()}
-    candidates = [cf["frontend_candidate"], cf["api_candidate"]]
+    candidates = [
+        cf["frontend_candidate"],
+        cf["api_candidate"],
+        cf["frontend_customer_host_requested"],
+        cf["api_customer_host_requested"],
+    ]
     conflicts = []
     def check(kind, identifier, patterns):
         for host in candidates:
@@ -290,7 +319,11 @@ def inventory_domains(target, client):
             if not isinstance(detail.get("rules"), list):
                 raise Blocked("Ruleset details incomplete")
             rule_counts[item["id"]] = len(detail["rules"])
-    worker_collision = any(x.get("id") == "hablas-evo-frontend-staging" for x in collections["workers"])
+    reserved_worker_names = {"hablas-evo-frontend-staging", "hablas-evo-frontend-production"}
+    worker_name_collisions = sorted(
+        x.get("id") for x in collections["workers"] if x.get("id") in reserved_worker_names
+    )
+    worker_collision = bool(worker_name_collisions)
     ssl = client.get(f"/zones/{z}/settings/ssl")["result"].get("value")
     # Expressions/lists/managed rules, Coolify and parent cookies need review.
     # No rule-expression evaluator can safely treat mere absence of a substring as clearance.
@@ -300,7 +333,9 @@ def inventory_domains(target, client):
         "account_id": a, "zone_id": z, "candidates": candidates,
         "counts": {key: len(value) for key, value in collections.items()},
         "ruleset_rule_counts": rule_counts, "conflicts": conflicts,
-        "worker_name_collision": worker_collision, "zone_ssl_mode": ssl,
+        "worker_name_collision": worker_collision,
+        "worker_name_collisions": worker_name_collisions,
+        "zone_ssl_mode": ssl,
         "remaining": ["Review rule expressions and referenced lists securely",
                       "Complete Coolify/proxy domain inventory and parent-cookie audit",
                       "Validate hostname-only TLS and staging Access",

@@ -1,8 +1,9 @@
-# Runbook frontend Workers — publicação bloqueada
+# Runbook frontend Workers — publicação autorizada por gates
 
-Conta GoLevel confirmada; IDs no target e Wrangler. Configuração exclusiva de
-staging, sem rota, workers.dev ou preview URL públicos. Nenhum Worker criado.
-Wrangler fixado em 4.130.0 no package.json operacional, independente do frontend.
+Conta GoLevel confirmada; IDs no target e Wrangler. O bloco principal representa
+staging e `env.production` reserva o nome final; nenhum deles contém rota, Custom
+Domain, workers.dev ou preview URL público. Nenhum Worker foi criado. Wrangler
+4.130.0 usa Node 22.19.0 no CI; o build frontend permanece em Node 20.20.0.
 
 ## Inventário
 
@@ -25,24 +26,31 @@ Falta de leitura de uma categoria bloqueia o inventário automatizado.
 ## Build auditado
 
 Gerenciador selecionado por Dockerfile: npm e package-lock.json (há também pnpm lock,
-não foi usado). `npm ci --no-audit --no-fund` preservou o lockfile. Build TypeScript +
-Vite concluiu com Node 26.7.0/npm 11.19.0, URLs públicas `https://api.build.invalid`.
-É teste de compilação, não artefato de release. Repetir com Node 20 fixado/compatível
-ao Dockerfile e URLs finais após resolver a rota de campanhas.
+não foi usado). O build TypeScript + Vite local concluiu com Node 20.20.0 e todas as
+origens em `evo-api-stg.hablas.chat`; o scanner não encontrou placeholder, `.invalid`
+ou localhost API ativo. CI ainda precisa reproduzir e publicar o dist + manifesto
+SHA-256 como artefato imutável antes de qualquer deploy.
 
 O cliente acrescenta `/api/v1`; ActionCable converte a origem e acrescenta `/cable`.
 Não repetir sufixos. VITE_EVOFLOW_API_URL continua necessária para campaignsService;
 sem adaptação do gateway ela não pode ser substituída silenciosamente pela URL CRM.
+VITE_CAMPAIGN_API_URL também é obrigatória: ela gera URLs públicas de trigger de
+jornada e seu fallback upstream é `localhost:3000`.
+
+O manifesto SHA-256 cobre cada arquivo de `dist` e também `worker.mjs` e
+`wrangler.jsonc`; o upload remoto do artefato e a publicação GHCR permanecem
+condicionados a `remote_changes_authorized`; a autorização agora está ativa para a
+sequência staging/final aprovada.
 
 ## Antes da publicação
 
 1. Resolver os bloqueios de domain-allocation.md e definir Access restrito do
    frontend antecipado. Não liberar API/setup incompleto nem canais de produção.
-2. Gerar `_headers` no dist preservando nosniff e a CSP do Nginx, ajustando connect
-   às origens verificadas; preservar exceção de embedding `/widget` com política
-   apropriada. Este passo ainda não foi implementado/testado, não declarar paridade.
-3. Tratar explicitamente rotas `/api/*` no host frontend para não mascarar JSON
-   com SPA. O template assets-only atual ainda usa fallback SPA genérico.
+2. O Worker local agora aplica nosniff/CSP e política distinta de embedding para
+   `/widget`; `https:`/`wss:` permanecem necessários para integrações e dashboards
+   configuráveis. Validar a política contra integrações reais antes da publicação.
+3. O Worker rejeita caminhos backend no host frontend antes do fallback SPA;
+   manter o teste de contrato para que requisições JSON nunca recebam HTML.
 4. Conferir bundle: nenhuma VITE placeholder, credencial, URL privada ou `.invalid`
    ativa. Fallbacks localhost literais existem no código, exigem revisão de uso efetivo.
 5. Validar Wrangler local, escolher apenas o hostname novo como custom domain e

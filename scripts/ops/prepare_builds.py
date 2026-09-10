@@ -93,6 +93,35 @@ def transform(service, destination):
         session = destination / "config/initializers/session_store.rb"
         if service == "auth":
             replace(session, "_evo_auth_service_session", "_hablas_evo_stg_auth_session")
+            production = destination / "config/environments/production.rb"
+            replace(production,
+                    "GlobalConfigService.load('ACTIVE_STORAGE_SERVICE', ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local'))",
+                    "ENV.fetch('ACTIVE_STORAGE_SERVICE') { GlobalConfigService.load('ACTIVE_STORAGE_SERVICE', 'local') }")
+            dynamic_storage = destination / "config/initializers/active_storage_dynamic_service.rb"
+            replace(dynamic_storage,
+                    "service_name = GlobalConfigService.load(\n"
+                    "          'ACTIVE_STORAGE_SERVICE',\n"
+                    "          ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local')\n"
+                    "        ).presence || 'local'",
+                    "service_name = ENV.fetch('ACTIVE_STORAGE_SERVICE') {\n"
+                    "          GlobalConfigService.load('ACTIVE_STORAGE_SERVICE', 'local')\n"
+                    "        }.presence || 'local'")
+            storage = destination / "config/storage.yml"
+            replace(storage,
+                    "  access_key_id: <%= GlobalConfigService.load('STORAGE_ACCESS_KEY_ID', ENV.fetch('STORAGE_ACCESS_KEY_ID', '')) rescue ENV.fetch('STORAGE_ACCESS_KEY_ID', '') %>",
+                    "  access_key_id: <%= ENV.fetch('STORAGE_ACCESS_KEY_ID') if ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local') == 's3_compatible' %>")
+            replace(storage,
+                    "  secret_access_key: <%= GlobalConfigService.load('STORAGE_ACCESS_SECRET', ENV.fetch('STORAGE_SECRET_ACCESS_KEY', '')) rescue ENV.fetch('STORAGE_SECRET_ACCESS_KEY', '') %>",
+                    "  secret_access_key: <%= ENV.fetch('STORAGE_SECRET_ACCESS_KEY') if ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local') == 's3_compatible' %>")
+            replace(storage,
+                    "  region: <%= GlobalConfigService.load('STORAGE_REGION', ENV.fetch('STORAGE_REGION', 'auto')) rescue ENV.fetch('STORAGE_REGION', 'auto') %>",
+                    "  region: <%= ENV.fetch('STORAGE_REGION', 'auto') if ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local') == 's3_compatible' %>")
+            replace(storage,
+                    "  bucket: <%= GlobalConfigService.load('STORAGE_BUCKET_NAME', ENV.fetch('STORAGE_BUCKET_NAME', '')) rescue ENV.fetch('STORAGE_BUCKET_NAME', '') %>",
+                    "  bucket: <%= ENV.fetch('STORAGE_BUCKET_NAME') if ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local') == 's3_compatible' %>")
+            replace(storage,
+                    "  endpoint: <%= GlobalConfigService.load('STORAGE_ENDPOINT', ENV.fetch('STORAGE_ENDPOINT', '')) rescue ENV.fetch('STORAGE_ENDPOINT', '') %>",
+                    "  endpoint: <%= ENV.fetch('STORAGE_ENDPOINT') if ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local') == 's3_compatible' %>")
             helper = destination / "app/controllers/concerns/auth_helper.rb"
             text = helper.read_text()
             start, end = text.index("  def cookie_domain\n"), text.index("  def render_unauthorized(")

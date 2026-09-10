@@ -1,4 +1,4 @@
-# Runbook Coolify — preparação, não implantado
+# Runbook Coolify — dados implantados, aplicação bloqueada
 
 Atualização de implementação: compose.app.yml já está preparado e o parser Compose
 5.1.4 validou os dois arquivos sem interpolação. As imagens da aplicação devem
@@ -9,11 +9,10 @@ de deployment-report.md e supabase-validation.md.
 Versão observada: 4.3.18. Destino e baseline em environment.target.yml e docs.
 Referência conferida: https://coolify.io/docs/knowledge-base/docker/compose
 
-Projeto novo já criado: `jjxcrsedavkskvcbnuvmkaql`; staging vazio:
-`xukzvsnkjemq085zitdzzytf`. Retomar pelo manifesto existente, nunca recriar por nome.
-O ambiente padrão automaticamente criado pelo Coolify foi renomeado para staging.
-Nenhum recurso de aplicação/dados está associado ao host ainda; project/environment
-são metadados do painel, não comprovam implantação na VPS.
+Projeto `jjxcrsedavkskvcbnuvmkaql` e ambiente staging
+`xukzvsnkjemq085zitdzzytf` já existem. O recurso de dados está implantado; a aplicação
+continua ausente. Retomar pelos UUIDs e manifesto existentes, nunca recriar por nome.
+Nenhum domínio público foi associado aos recursos desta implantação.
 
 ## Verificações locais disponíveis
 
@@ -33,12 +32,12 @@ sem atualizar o parser. `compose.data.yml` é YAML Compose normal.
 
 ## Preparação dos dados
 
-`infra/coolify/compose.data.yml` contém Redis/RabbitMQ/ClickHouse, sem portas públicas,
-sem redes externas presumidas, com volumes exclusivos, limites, rotação de logs e
-health checks. **É configuração proposta, ainda não validada pelo Docker Compose.**
-É proibido implantar só porque o arquivo faz parse em YAML.
+`infra/coolify/compose.data.yml` define o recurso de dados já implantado: Redis,
+RabbitMQ e ClickHouse sem portas públicas, com volumes exclusivos, limites, rotação
+de logs e health checks. O Compose passou no parser 5.1.4 e os três serviços estão
+healthy no servidor registrado. Isto não autoriza alteração nem reimplantação.
 
-Antes de usar:
+Antes de alterar ou reimplantar:
 
 1. Aprovar imagens/digests reais para linux/amd64 e gravar em versions.lock/manifesto.
    Os campos de env.data.example ficam vazios até isso; `:?` bloqueia vazios,
@@ -60,12 +59,11 @@ Antes de usar:
 
 ## Aplicação / migrations
 
-`compose.app.yml`, executor de migrations e deploy mutável ainda pendentes:
-dependerão das correções DDL/TLS/contrato listadas em architecture-target.md e do
-mapa Supabase. Não há loop automático de deploy enquanto Supabase está pendente.
-Processos Rails de staging usarão RAILS_ENV=production, mas não serão iniciados
-antes da validação do banco. Inicialmente restringir setup e criar admin com
-procedimento seguro antes de permitir acesso geral.
+`compose.app.yml`, overlays DDL/TLS, banco Supabase dedicado e bootstrap de schemas
+estão preparados/validados conforme `deployment-report.md`. Ainda faltam imagens da
+receita atual, testes de container, criação autorizada da aplicação e deploy. Processos
+Rails de staging usarão `RAILS_ENV=production`. Criar o primeiro admin pela rede
+interna antes de associar qualquer domínio, conforme `crm-cutover-plan.md`.
 
 ## Operação
 

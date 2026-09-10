@@ -1,6 +1,31 @@
 # Relatório de implantação — checkpoint de staging
 
-## Estado mais recente — dados e banco principal prontos
+## Estado mais recente — execução staging/final autorizada
+
+O responsável escolheu `crm.hablas.chat` para o frontend final,
+`api-crm.hablas.chat` para a API final e confirmou fresh start: usuários, histórico,
+mídia e configurações do fornecedor anterior não serão importados. A autorização
+vigente passou a `FULL_STAGING_AND_FINAL_DEPLOYMENT_AUTHORIZED`; staging, aplicação
+Coolify, DNS/Workers e publicação final estão autorizados em sequência controlada.
+
+Às 17:37 UTC de 10/09/2026, consultas read-only autenticadas à Cloudflare confirmaram
+zero registros DNS e zero Workers Custom Domains para `crm.hablas.chat`,
+`api-crm.hablas.chat`, `evo-stg.hablas.chat` e `evo-api-stg.hablas.chat`. O e-mail e
+DKIM sob `crm.hablas.chat` permanecem preservados. O CI do HEAD remoto `e18d520`
+passou no run 34483306076.
+
+Localmente, o Gate A agora inclui build frontend com sete origens staging,
+Worker Static Assets com CSP/headers e bloqueio de rotas backend, ambientes Wrangler
+staging/production sem domínio ativo, manifesto SHA-256 do dist, Auth HTTPS/HSTS e
+ActiveStorage R2 priorizando ambiente, gateway com CORS exato e rota de campanhas,
+além de testes e guardas preparados para CI. O build passou localmente em Node
+20.20.0; testes Worker e dry-runs Wrangler passaram em Node 22.19.0. O workflow
+separa as duas toolchains e condiciona upload/GHCR à autorização remota, agora ativa.
+A revisão independente final não encontrou bloqueios altos ou médios. Docker/actionlint
+local continuam indisponíveis; CI remoto é a próxima prova;
+a release implantável permanece `38e99df` até a conclusão do CI agora autorizado.
+
+## Base existente — dados e banco principal prontos
 
 R2 atualizado: buckets privados hablas-evo-staging-media e hablas-evo-staging-backups
 criados na conta GoLevel, ENAM/Standard, sem r2.dev nem custom domains habilitados.
@@ -38,10 +63,14 @@ foram removidos; somente os marcadores de propriedade foram preservados.
   com padding; 31 valores, serviços de dados e credencial migradora foram validados.
   Os dois tokens R2 também foram substituídos após exposição de cópias baixadas; os
   anteriores foram excluídos, os substitutos repetiram o smoke e as cópias foram removidas.
-- **Aplicação e frontend:** ainda não implantados. Integração R2, URLs finais, setup/admin,
+- **Aplicação e frontend:** ainda não implantados. Fresh start/setup/admin,
   backups/restore e testes funcionais continuam pendentes.
-- **Domínios:** crm.hablas.chat é o frontend desejado pelo responsável, sujeito à
-  revisão do CNAME existente; nenhuma alteração DNS nesta etapa.
+- **Domínios:** a revisão autenticada confirmou o CRM white-label anterior em
+  crm.hablas.chat. O responsável liberou o subdomínio removendo o CNAME; às 15:13
+  UTC ele não tinha CNAME/A/AAAA, não resolvia publicamente e ainda não estava
+  vinculado a Worker. `api-crm` e `lp.crm` também foram removidos; o CNAME de
+  e-mail e o DKIM permanecem preservados. `docs/crm-cutover-plan.md` registra os
+  gates de homologação, fresh start, GO e rollback antes de usar o host liberado.
 
 Os checkpoints anteriores abaixo são históricos; esta seção e os documentos de
 evidência por componente representam o estado atual.
