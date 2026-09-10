@@ -29,45 +29,49 @@
     "host_allocation_status": "REVIEW_REQUIRED"
   },
   "supabase": {
-    "status": "PRIMARY_BOOTSTRAP_PENDING",
-    "project_ref_owner_provided": "fizdiennudpyqrzmdukm",
+    "status": "VALIDATED",
+    "project_ref_owner_provided": "znxlfqctnezrropcbftw",
     "project_identity_status": "VERIFIED_PROJECT_URL_AND_DASHBOARD",
-    "project_name": "hablas-crm",
+    "project_name": "hablas-evo-staging",
     "organization_name": "Hablas",
     "organization_id": "hnaujighizgevlmtkycw",
     "region": "us-east-1",
+    "plan": "Free",
+    "compute": "nano",
+    "data_api_enabled": false,
+    "legacy_jwt_keys_enabled": false,
     "postgres_version_observed": "17.6",
     "vector_version_available": "0.8.2",
     "vector_installed": true,
-    "public_tables_observed": 0,
-    "isolation_decision": "OWNER_APPROVED_SINGLE_PROJECT_SEPARATE_SCHEMAS",
+    "public_tables_observed": 110,
+    "isolation_decision": "OWNER_APPROVED_DEDICATED_STAGING_PROJECT",
     "main_schema": "public",
     "evoflow_schema": "hablas_evoflow_staging",
     "evoflow_schema_status": "MIGRATED_RUNTIME_VERIFIED",
-    "evoflow_schema_oid": 17494,
+    "evoflow_schema_oid": 17493,
     "main_connection": {
       "mode": "session",
       "host": "aws-0-us-east-1.pooler.supabase.com",
       "port": 5432,
       "database": "postgres",
-      "admin_username": "postgres.fizdiennudpyqrzmdukm",
-      "runtime_username": "hablas_evo_stg_main.fizdiennudpyqrzmdukm",
-      "migration_username": "hablas_evo_stg_main_migrator.fizdiennudpyqrzmdukm",
-      "status": "MAIN_ROLES_CREATED_SCHEMA_BOOTSTRAP_PENDING"
+      "admin_username": "postgres.znxlfqctnezrropcbftw",
+      "runtime_username": "hablas_evo_stg_main.znxlfqctnezrropcbftw",
+      "migration_username": "hablas_evo_stg_main_migrator.znxlfqctnezrropcbftw",
+      "status": "MAIN_BOOTSTRAPPED_RUNTIME_VERIFIED"
     },
     "direct_connection": {
-      "host": "db.fizdiennudpyqrzmdukm.supabase.co",
+      "host": "db.znxlfqctnezrropcbftw.supabase.co",
       "port": 5432,
       "database": "postgres",
       "admin_username": "postgres"
     },
     "mcp_mode": "read_only",
     "mcp_status": "AUTHENTICATED_METADATA_READ_VERIFIED",
-    "connection_secret_refs": ["local-file:.ops-private/secrets/fizdiennudpyqrzmdukm-admin.password"]
+    "connection_secret_refs": ["local-file:.ops-private/secrets/znxlfqctnezrropcbftw-admin.password"]
   },
   "verification": {
-    "observed_at": "2026-09-10T01:30:00Z",
-    "method": "authenticated_browser_and_coolify_terminal_read_only",
+    "observed_at": "2026-09-10T09:58:00Z",
+    "method": "authenticated_browser_and_verified_tls_postgresql_login",
     "baseline": "docs/existing-environment-baseline.md",
     "revalidate_before_every_remote_write": true
   },

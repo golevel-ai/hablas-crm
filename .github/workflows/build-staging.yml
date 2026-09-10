@@ -64,6 +64,13 @@ jobs:
           docker compose -f infra/coolify/compose.app.yml config --no-interpolate --quiet
           docker compose -f infra/coolify/compose.data.yml config --no-interpolate --quiet
           node --test scripts/ops/test_tls.cjs
+          node --check scripts/ops/verify_main.cjs
+          node --check scripts/ops/verify_main_completion.cjs
+          node --check scripts/ops/rotate_exposed_predeployment.cjs
+          node scripts/ops/rotate_exposed_predeployment.cjs --self-test
+          python3 -m py_compile scripts/ops/rotate_data_credentials_host.py scripts/ops/smoke_r2.py
+          node --check scripts/ops/verify_main.cjs
+          python3 -m py_compile scripts/ops/bootstrap_main_host.py scripts/ops/bootstrap_processor_alembic.py scripts/ops/bootstrap_processor.py
       - name: Prepare immutable EvoFlow source context
         id: context
         run: |

@@ -1,5 +1,25 @@
 # Supabase: validação e bootstrap limitado executados
 
+## Projeto dedicado posterior
+
+Após esta primeira validação, o responsável autorizou o segundo projeto gratuito.
+Em 10/09/2026 foi criado **hablas-evo-staging**, ref `znxlfqctnezrropcbftw`, na
+mesma organização Hablas, us-east-1, Free/nano, sem addon. O painel confirmou o
+projeto `ACTIVE_HEALTHY`; login administrativo pelo Session Pooler e TLS verificado
+confirmaram PostgreSQL 17.6, public vazio e vector inicialmente ausente. Data API
+foi desativada. Chaves JWT legadas também foram desativadas e o segredo legado
+observado durante diagnóstico foi revogado antes de qualquer usuário ou aplicação.
+
+O bootstrap EvoFlow foi repetido somente no novo projeto: schema OID 17493, roles
+OID 17489/17491, 17 migrations e zero tabelas em public antes/depois. A role de
+runtime repetiu as provas de CRUD, sem DDL, sem leitura de auth.users e sem acesso
+ao histórico. Depois foram criadas as roles principais (OID 17988/17990) e vector
+0.8.2 em extensions. O bootstrap principal posterior criou 110 tabelas e concluiu
+CRM/Auth/Core/Processor, seeds e grants. O projeto hablas-crm
+e todos os recursos previamente criados nele foram preservados sem limpeza.
+
+## Histórico do primeiro projeto avaliado
+
 Data: 10/09/2026. Projeto **hablas-crm**, ref `fizdiennudpyqrzmdukm`, organização
 **Hablas** (`hnaujighizgevlmtkycw`), região us-east-1, plano Free, compute nano.
 O responsável autorizou **um único projeto, com schemas separados**.
@@ -62,15 +82,28 @@ PASS via Session Pooler/TLS com a role hablas_evo_stg_flow:
 - Acesso ao histórico de migrations: negado.
 - Contacts novos: zero. Public: zero tabelas antes e depois.
 
-## Pendências
+## Bootstrap principal e runtime
 
-Atualização: vector 0.8.2 foi habilitado em extensions. Foram criadas as roles
+Vector 0.8.2 foi habilitado em extensions. Foram criadas as roles
 hablas_evo_stg_main_migrator (OID 17988, limite 3) e hablas_evo_stg_main
 (OID 17990, limite 40), sem superuser/createdb/createrole, com marcador e senhas
-próprios. Apenas grants de schema foram aplicados nesta preparação; o schema
-principal continua aguardando bootstrap. O EvoFlow manteve OID/17 migrations.
+próprios. O executor no host usou flock, advisory lock mantida por conexão e imagens
+imutáveis. CRM, Auth, Core, Alembic/Processor e seeds passaram; o EvoFlow manteve
+OID/17 migrations.
 
-Bootstrap principal Auth/CRM/Core/Processor, extensão vector para esse conjunto,
-runtime role principal, Data API/grants de public antes de armazenar dados,
-backup/restore e testes com todos os containers. Não classificar T03/T04 completos
-nem o produto como implantado com base apenas nesta etapa EvoFlow.
+Uma tentativa inicial de Alembic revelou que asyncpg não aceita `sslrootcert` como
+query param. O runner final abriu a conexão com SSLContext, CA e hostname verificados
+e a injetou no Alembic. O bootstrap valida hashes/owner dos scripts e reconcilia o
+marcador de conclusão com schema/grants reais, impedindo que seeds sejam repetidos
+depois do primeiro sucesso ou suprimidos após divergência do banco.
+
+A role real de runtime passou via Session Pooler/TLS: 110 tabelas em public, CRUD em
+contacts, CREATE negado, sem acesso a auth.users ou ao schema EvoFlow, e sem escrita
+nos quatro históricos de migration. O marcador da release foi confirmado e o probe
+ADK deixou zero registros sintéticos.
+
+## Pendências
+
+Implantar os containers da aplicação, validar setup/admin e fluxos entre serviços,
+executar backup/restore e testes funcionais. O banco pronto não classifica o produto
+como implantado.

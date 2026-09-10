@@ -26,6 +26,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--target', required=True, type=Path)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--rotate-encryption-key', action='store_true',
+                        help='Replace only the unused predeployment Fernet key')
     args = parser.parse_args()
     try:
         target = validate_target(load(args.target))
@@ -43,6 +45,11 @@ def main():
             app = load(app_file)
             if app['owner'] != owner or app_file.stat().st_mode & 0o077:
                 raise Blocked('Application key ownership or permissions mismatch')
+            if args.rotate_encryption_key:
+                if manifest['coolify'].get('app_uuid') is not None:
+                    raise Blocked('Cannot rotate an application encryption key after deployment')
+                app['values']['ENCRYPTION_KEY'] = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode()
+                private_write(app_file, app)
         else:
             values = {key: secrets.token_hex(32) for key in ('JWT_SECRET_KEY', 'DOORKEEPER_JWT_SECRET_KEY',
                       'EVOAI_CRM_API_TOKEN', 'BOT_RUNTIME_SECRET', 'AUTH_APIKEY_INTEGRATION_LOCAL')}
@@ -76,7 +83,8 @@ def main():
                 raise Blocked('Operator environment values must be single-line')
             data['values']['EVO_OPS_' + key] = value
         private_write(data_file, data)
-        print('PREPARED: operator inputs in protected file; render/apply per-container masks BEFORE updating Coolify env')
+        action = 'rotated unused encryption key and ' if args.rotate_encryption_key else ''
+        print('PREPARED: ' + action + 'operator inputs in protected file; render/apply per-container masks BEFORE updating Coolify env')
         return 0
     except (Blocked, OSError, KeyError, ValueError) as exc:
         print('BLOCKED: ' + (str(exc) if isinstance(exc, Blocked) else 'maintenance configuration incomplete'), file=sys.stderr)

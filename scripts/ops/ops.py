@@ -29,6 +29,9 @@ EXPECTED = {
     "cloudflare.account_id": "85354ee4fc8d1c079a66f6321a5c78c5",
     "cloudflare.zone_name": "hablas.chat",
     "cloudflare.zone_id": "b0a4153d93f81cd7957e34cdfcd11e60",
+    "supabase.organization_id": "hnaujighizgevlmtkycw",
+    "supabase.project_ref_owner_provided": "znxlfqctnezrropcbftw",
+    "supabase.project_name": "hablas-evo-staging",
 }
 SAFETY = {
     "existing_system_must_remain_unchanged": True,

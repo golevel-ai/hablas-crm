@@ -49,7 +49,7 @@ async function main() {
   const manifest = read(path.join(ROOT, 'infra/deployment-manifest.yml'));
   const ref = target.supabase.project_ref_owner_provided;
   const owner = manifest.ownership_marker;
-  if (ref !== 'fizdiennudpyqrzmdukm' || target.supabase.isolation_decision !== 'OWNER_APPROVED_SINGLE_PROJECT_SEPARATE_SCHEMAS'
+  if (ref !== 'znxlfqctnezrropcbftw' || target.supabase.isolation_decision !== 'OWNER_APPROVED_DEDICATED_STAGING_PROJECT'
       || owner !== 'hablas-evo-infra-staging-5fd09cad-c52d-40a9-b4af-f7a57f65bed9') throw new Error('OWNERSHIP');
   const context = fs.realpathSync(arg('--context'));
   if (!context.startsWith(path.join(ROOT, '.ops-private/build/')) || !context.endsWith('/evoflow')) throw new Error('CONTEXT');
@@ -72,7 +72,7 @@ async function main() {
   }
   const plan = { project_ref: ref, schema: SCHEMA, roles: [MIGRATOR, RUNTIME],
     extension_if_absent: 'pg_trgm in extensions', migrations: 17, source_commit: proof.source_commit,
-    public_schema_action: 'none', cost: 'existing free project; no new project or paid addon' };
+    public_schema_action: 'none', cost: 'second included Free Plan project; no paid addon' };
   if (argv.includes('--dry-run')) {
     console.log(JSON.stringify({ status: 'NOT_EXECUTED', plan }, null, 2));
     return;

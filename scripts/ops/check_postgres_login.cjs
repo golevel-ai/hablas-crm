@@ -20,10 +20,14 @@ async function main() {
   const target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
   const supabase = target.supabase;
   if (target.project !== 'hablas-evo-infra' || target.environment !== 'staging'
-      || supabase.project_ref_owner_provided !== 'fizdiennudpyqrzmdukm'
+      || supabase.project_ref_owner_provided !== 'znxlfqctnezrropcbftw'
       || supabase.project_identity_status !== 'VERIFIED_PROJECT_URL_AND_DASHBOARD') throw new Error('TARGET');
   const connection = supabase[mode === 'session' ? 'main_connection' : 'direct_connection'];
-  if (connection.port !== 5432 || !/^[a-z0-9.-]+\.supabase\.(?:co|com)$/.test(connection.host)) throw new Error('HOST');
+  const expected = mode === 'session'
+    ? { host: 'aws-0-us-east-1.pooler.supabase.com', user: 'postgres.znxlfqctnezrropcbftw' }
+    : { host: 'db.znxlfqctnezrropcbftw.supabase.co', user: 'postgres' };
+  if (connection.port !== 5432 || connection.host !== expected.host
+      || connection.admin_username !== expected.user) throw new Error('HOST');
   if (argv.includes('--dry-run')) {
     console.log('NOT_EXECUTED: PostgreSQL login + fixed catalog queries inside READ ONLY transaction');
     return;

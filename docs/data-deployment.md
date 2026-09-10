@@ -63,3 +63,16 @@ de baseline; nenhuma ação explícita de restart do Sentinel foi executada.
 Esta etapa comprova implantação/saúde/limites/volumes, não backup ou restauração.
 Ainda faltam: consumo pela aplicação, teste de jobs, pausa real de 60 minutos no
 broker, evento ClickHouse e restauração externa. Nenhum desses testes foi marcado PASS.
+
+## Rotação preventiva posterior
+
+Valores operacionais apareceram em outputs de inspeção e foram tratados
+como comprometidos antes da promoção. Após a última exposição, foram rotacionados novamente o migrator principal, todas
+as chaves de aplicação ainda não usadas e REDIS_PASSWORD, RABBITMQ_PASSWORD,
+RABBITMQ_ERLANG_COOKIE e CLICKHOUSE_PASSWORD. RabbitMQ/ClickHouse foram atualizados
+live; o cookie persistido foi substituído atomicamente; somente esta stack foi
+reiniciada. Depois, os três serviços voltaram a healthy e o host comprovou login com
+as credenciais novas, cookie novo, portas privadas e todas as 69 máscaras EVO_OPS.
+O redeploy materializou os 31 valores atuais no `.env`; a verificação removeu o
+payload temporário de rotação. A chave de criptografia foi validada como uma chave
+Fernet de 32 bytes, Base64 URL com padding. Nenhum volume, fila ou tabela foi removido.

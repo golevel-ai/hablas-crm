@@ -43,13 +43,11 @@ async def prepare_adk():
     await service.create_session(app_name=app, user_id=user, session_id=session_id)
     await service.delete_session(app_name=app, user_id=user, session_id=session_id)
     # This is synthetic bootstrap metadata, not a customer identity or channel.
-    from sqlalchemy.ext.asyncio import create_async_engine
     from sqlalchemy import text
-    cleanup = create_async_engine(url, connect_args=connect_args, pool_size=1, max_overflow=0)
-    async with cleanup.begin() as connection:
+    async with service.db_engine.begin() as connection:
         await connection.execute(text('DELETE FROM user_states WHERE app_name=:app AND user_id=:user'), {'app': app, 'user': user})
         await connection.execute(text('DELETE FROM app_states WHERE app_name=:app'), {'app': app})
-    await cleanup.dispose()
+    await service.db_engine.dispose()
 
 
 asyncio.run(prepare_adk())

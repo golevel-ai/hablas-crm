@@ -42,6 +42,7 @@ ENCRYPTION_KEY=$(python3 -c 'import os,base64; print(base64.urlsafe_b64encode(os
 COMMON=(--rm --network "$NETWORK_ID" --memory 2g --cpus 1 --entrypoint bundle
   --mount "type=bind,source=$ROOT/infra/tests,target=/ops,readonly"
   --mount "type=bind,source=$ROOT/scripts/ops/bootstrap_crm.rb,target=/bootstrap_crm.rb,readonly"
+  --mount "type=bind,source=$ROOT/scripts/ops/bootstrap_processor_alembic.py,target=/processor-alembic.py,readonly"
   --mount "type=bind,source=$ROOT/scripts/ops/bootstrap_processor.py,target=/processor-bootstrap.py,readonly"
   -e RAILS_ENV=production -e RUN_MIGRATIONS=false -e INFRA_LOCAL_SCHEMA_TEST=true
   -e EVO_BOOTSTRAP_OWNER=hablas-evo-infra-staging-5fd09cad-c52d-40a9-b4af-f7a57f65bed9
@@ -60,7 +61,7 @@ docker run "${COMMON[@]}" "$AUTH_IMAGE" exec rails db:migrate
 docker run "${COMMON[@]}" --entrypoint ./migrate -e PGPASSWORD=local-ci-only-password "$CORE_IMAGE" \
   -database 'postgres://postgres@pg:5432/postgres?sslmode=disable&x-migrations-table=evo_core_community_schema_migrations' -path ./migrations up
 PROCESSOR_DSN='postgresql://postgres:local-ci-only-password@pg:5432/postgres?sslmode=disable'
-docker run "${COMMON[@]}" --entrypoint alembic -e "POSTGRES_CONNECTION_STRING=$PROCESSOR_DSN" "$PROCESSOR_IMAGE" upgrade head
+docker run "${COMMON[@]}" --entrypoint python -e "POSTGRES_CONNECTION_STRING=$PROCESSOR_DSN" "$PROCESSOR_IMAGE" /processor-alembic.py
 docker run "${COMMON[@]}" --entrypoint python -e "POSTGRES_CONNECTION_STRING=$PROCESSOR_DSN" "$PROCESSOR_IMAGE" /processor-bootstrap.py
 docker run "${COMMON[@]}" -e INFRA_TEST_PHASE=crm-write "$CRM_IMAGE" exec rails runner /ops/primary-schema-probe.rb
 docker run "${COMMON[@]}" -e INFRA_TEST_PHASE=auth-read-write "$AUTH_IMAGE" exec rails runner /ops/primary-schema-probe.rb

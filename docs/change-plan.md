@@ -1,11 +1,11 @@
 # Plano de mudanças — staging
 
-**Estado: projeto/ambiente vazios criados; workloads não implantados.**
+**Estado: dados e banco prontos; aplicação e frontend ainda não implantados.**
 Destino exclusivo: VPS-US-VA-002-OP / 51.81.80.55 / UUID
 `hwt9rmdg9rrodfb9hilh8vcn`, Coolify 4.3.18 em my.golevel.ai.
 Cloudflare GoLevel / hablas.chat, IDs em `infra/environment.target.yml`.
 
-## Recursos propostos, sujeitos a preflight
+## Estado dos recursos
 
 ### Dados Coolify — preflight renovado em 10/09/2026 04:56Z
 
@@ -14,15 +14,13 @@ livre, onze containers existentes saudáveis e nenhum volume com prefixo hablas-
 Staging continua com zero recursos antes desta criação. Destino selecionado na UI:
 server_id 5, destination `eolu061gu7rqdmd7umerbmuu`, correspondente ao UUID fixado.
 
-Criar o recurso Compose de dados com o YAML público materializado a partir das
-configurações versionadas e digests verificados. SHA-256 do YAML enviado:
-`182ae9dd64cfdc3aea3a15f55d88b45a86168020ef8b4dbb490d83a07047ffbb`.
-O parser Compose 5.1.4 validou o resultado. Credenciais serão geradas uma vez e
-vinculadas ao UUID retornado antes do primeiro start. Nenhum domínio ou porta de
-host; limites novos de dados somam 2,5 GiB/1 CPU. Registrar UUID/volumes/rede e
-revalidar os recursos anteriores após a implantação.
+O recurso Compose de dados foi criado com YAML materializado a partir das
+configurações versionadas e digests verificados. O parser Compose 5.1.4 validou o
+resultado. Credenciais finais estão vinculadas ao UUID e rotacionadas. Nenhum
+domínio ou porta de host; limites de dados somam 2,5 GiB/1 CPU. UUID, volumes e
+rede estão registrados em `docs/data-deployment.md`.
 
-| Recurso | Nome proposto | Pré-condições |
+| Recurso | Nome/estado | Pré-condições |
 |---|---|---|
 | Projeto Coolify | hablas-evo-infra | Inventário de projetos completo, ausência de colisão |
 | Ambiente | staging, dentro do projeto novo | Project UUID e marcador de propriedade |
@@ -30,23 +28,23 @@ revalidar os recursos anteriores após a implantação.
 | Compose aplicação | hablas-evo-app-staging | Supabase validado; bootstrap único concluído; imagens próprias |
 | Worker | hablas-evo-frontend-staging | Build verificado; alocação completa; homologação restrita |
 | DNS/hostname | Apenas o par de staging validado | Ausência de conflito revalidada; TLS isolado |
-| R2 privado | hablas-evo-staging-media (proposta) | Disponibilidade, propriedade, custo e credencial exclusiva |
+| R2 privado | hablas-evo-staging-media / hablas-evo-staging-backups | Criados privados; smoke de objetos passou; backup/restore real pendente |
 | Volumes | hablas-evo-staging-redis/rabbitmq/clickhouse | Checagem de volumes e manifesto; jamais alterar nome em reexecução |
 
 Não criar recursos automaticamente a partir desta tabela. IDs ausentes significam
 ausência de recurso comprovado, não autorização para se apropriar de um homônimo.
 
-## Próxima escrita autorizada e isolada
+## Histórico da criação isolada
 
-Criar somente os metadados do projeto novo `hablas-evo-infra` e seu ambiente
+Foram criados somente os metadados do projeto novo `hablas-evo-infra` e seu ambiente
 `staging` na equipe autenticada `Go Team`, sem workloads ou cobrança. A consulta
 de projetos às 22:48 America/Sao_Paulo mostrou quatro projetos, nenhum homônimo.
 Marcador de propriedade novo:
 `hablas-evo-infra-staging-5fd09cad-c52d-40a9-b4af-f7a57f65bed9`.
-Gravar esse marcador na descrição e registrar UUID retornado no manifesto antes
-de criar o ambiente. Se o painel criar um ambiente padrão, ele pertence somente
-ao projeto novo; registrar seu ID e ajustar para staging sem tocar em terceiros.
-Revalidar as identidades e a ausência do nome imediatamente antes do submit.
+O marcador foi gravado na descrição e o UUID retornado foi registrado no manifesto.
+O ambiente padrão criado pelo painel foi vinculado somente ao projeto novo e
+renomeado para staging sem tocar em terceiros. Identidades e ausência do nome foram
+revalidadas imediatamente antes do submit.
 
 A primeira descrição usava `:` e `|`, rejeitados pelo ValidationPatterns da
 versão 4.3.18 (código consultado no tag correspondente). Não houve redirect de
@@ -72,6 +70,17 @@ container, Worker, DNS, bucket ou banco novo nesta execução.
 
 ## Sequência e travas
 
+### Supabase — projeto staging dedicado concluído
+
+O responsável autorizou usar o segundo projeto gratuito se isso não afetasse a
+instalação. A documentação oficial confirma dois projetos ativos no Free Plan; o
+painel confirmou Hablas/Free, spend cap ligado, nenhum método de pagamento e apenas
+hablas-crm ativo. Foi criado hablas-evo-staging em us-east-1 como segundo projeto
+incluído, sem addon, com Data API desativada. O projeto anterior não será alterado
+nem limpo: migrations e roles de ensaio permanecem preservadas. Como o bootstrap
+principal ainda não havia começado, todo runtime de staging foi reaplicado e
+validado no novo project_ref antes de prosseguir.
+
 ### R2 — autorização posterior do responsável
 
 O responsável autorizou criar hablas-evo-staging-media e hablas-evo-staging-backups,
@@ -82,17 +91,18 @@ nomes. Usar locationHint enam quando aceito, registrar criação e conferir publ
 access desligado, sem custom domains. Tokens devem permitir somente objetos do
 respectivo bucket. Nenhum bucket anterior será reutilizado ou alterado.
 
-### Acesso principal Supabase — preparação autorizada pela implantação
+### Acesso principal Supabase — concluído
 
 O ensaio CI 34438052395 passou no bootstrap nativo Auth/CRM e nos modelos
 compartilhados, sem o comando de marcar migrations indiscriminadamente.
-Próxima escrita limitada: criar roles novas `hablas_evo_stg_main_migrator` e
+A escrita limitada criou as roles `hablas_evo_stg_main_migrator` e
 `hablas_evo_stg_main`, com marcador do projeto e senhas exclusivas. Limites 3 e
 40 conexões, sem SUPERUSER/CREATEDB/CREATEROLE; search_path public,extensions.
-O migrator recebe CREATE em public; runtime recebe apenas USAGE até os grants
-de tabelas posteriores. Habilitar vector em extensions, sem alterar tabelas
-existentes. Conferir public ainda vazio e EvoFlow OID 17494/17 migrations intactos
-sob a mesma trava de sessão. Nenhum schema load nesta operação.
+O migrator recebeu CREATE em public; runtime recebeu inicialmente apenas USAGE.
+Vector foi habilitado em extensions. Depois, o bootstrap principal executou CRM,
+Auth, Core, Alembic/Processor e seeds sob trava exclusiva, e aplicou os grants finais.
+A verificação real confirmou 110 tabelas, CRUD permitido, DDL e acessos cruzados
+negados, históricos protegidos e EvoFlow OID 17493/17 migrations intactos.
 
 ### CI e GHCR — autorização explícita posterior
 
@@ -112,9 +122,9 @@ gerados por este run. Private, Internal e herança de acesso ficam com seus valo
 observados. Essa autorização tem escopo GitHub; não altera a política global
 Cloudflare, DNS ou Coolify. Conferir pull anônimo de cada digest após a alteração.
 
-### Supabase — decisão posterior e próximo bootstrap limitado
+### Histórico — decisão anterior substituída pelo projeto dedicado
 
-O responsável escolheu **usar somente o projeto atual**, autorizando avaliar/testar
+Naquele checkpoint, o responsável escolheu **usar somente o projeto atual**, autorizando avaliar/testar
 schemas separados. Projeto verificado: `fizdiennudpyqrzmdukm`, hablas-crm, organização
 Hablas (`hnaujighizgevlmtkycw`), us-east-1, Free. Login PostgreSQL administrativo
 via Session Pooler passou com CA/hostname verificados; senha recebida por diálogo

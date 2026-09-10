@@ -14,7 +14,7 @@ async function main() {
   const target = JSON.parse(fs.readFileSync(arg('--target'), 'utf8'));
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'infra/deployment-manifest.yml'), 'utf8'));
   const ref = target.supabase.project_ref_owner_provided;
-  if (ref !== 'fizdiennudpyqrzmdukm' || target.environment !== 'staging') throw new Error('TARGET');
+  if (ref !== 'znxlfqctnezrropcbftw' || target.environment !== 'staging') throw new Error('TARGET');
   if (argv.includes('--dry-run')) { console.log('NOT_EXECUTED: scoped runtime login and catalog privileges only'); return; }
   const context = fs.realpathSync(arg('--context'));
   if (!context.startsWith(path.join(root, '.ops-private/build/')) || !context.endsWith('/evoflow')) throw new Error('CONTEXT');

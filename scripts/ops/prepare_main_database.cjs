@@ -6,7 +6,7 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '../..');
-const ref = 'fizdiennudpyqrzmdukm';
+const ref = 'znxlfqctnezrropcbftw';
 const roles = { migrator: 'hablas_evo_stg_main_migrator', runtime: 'hablas_evo_stg_main' };
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const literal = value => "'" + value.replaceAll("'", "''") + "'";
@@ -32,8 +32,11 @@ async function main() {
   const target = read(arg('--target'));
   const file = path.join(ROOT, 'infra/deployment-manifest.yml');
   const manifest = read(file);
+  const flowOid = manifest.supabase.evoflow?.schema_oid;
   if (target.supabase.project_ref_owner_provided !== ref || target.environment !== 'staging'
-      || manifest.supabase.evoflow.schema_oid !== 17494) throw new Error('TARGET');
+      || manifest.supabase.project_ref_owner_provided !== ref
+      || manifest.supabase.evoflow?.status !== 'MIGRATED_RUNTIME_VERIFIED'
+      || !Number.isInteger(flowOid)) throw new Error('TARGET');
   if (args.includes('--dry-run')) {
     console.log(JSON.stringify({ status: 'NOT_EXECUTED', project_ref: ref, roles, main_schema: 'public',
       extension: 'vector in extensions', existing_tables_action: 'none' }, null, 2));
@@ -61,7 +64,7 @@ async function main() {
       (SELECT count(*)::int FROM pg_tables WHERE schemaname='public') AS public_tables,
       (SELECT oid FROM pg_namespace WHERE nspname='hablas_evoflow_staging') AS flow_oid,
       (SELECT count(*)::int FROM hablas_evoflow_staging.migrations) AS flow_migrations`, [Object.values(roles)])).rows[0];
-    if (before.existing_roles || before.public_tables || before.flow_oid !== 17494 || before.flow_migrations !== 17) throw new Error('BASELINE_OR_NAME_COLLISION');
+    if (before.existing_roles || before.public_tables || before.flow_oid !== flowOid || before.flow_migrations !== 17) throw new Error('BASELINE_OR_NAME_COLLISION');
     const passwords = {};
     for (const kind of Object.keys(roles)) {
       const destination = path.join(directory, ref + '-main-' + kind + '.password');

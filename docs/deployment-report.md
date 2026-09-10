@@ -1,36 +1,52 @@
 # Relatório de implantação — checkpoint de staging
 
-## Estado mais recente — dados implantados e preparação principal
+## Estado mais recente — dados e banco principal prontos
 
 R2 atualizado: buckets privados hablas-evo-staging-media e hablas-evo-staging-backups
 criados na conta GoLevel, ENAM/Standard, sem r2.dev nem custom domains habilitados.
 Tokens de conta separados, restritos a objetos do respectivo bucket, foram gerados
-e guardados localmente em arquivos 0600, sem valores em logs/Git. Upload/restore
-ainda não testados. Release 38e99df passou no CI 34446396309; os sete novos digests
+e guardados localmente em arquivos 0600, sem valores em logs/Git. Backup real e
+restauração ainda não foram testados. Release 38e99df passou no CI 34446396309; os sete novos digests
 foram verificados por acesso anônimo e o candidato anterior foi arquivado.
+
+Atualização Supabase: a organização Hablas está no Free Plan, spend cap ligado,
+sem método de pagamento, e tinha um projeto ativo. Com autorização posterior do
+responsável, hablas-evo-staging (`znxlfqctnezrropcbftw`) foi criado como o segundo
+projeto incluído, us-east-1/nano, sem addon e com Data API e chaves JWT legadas
+desativadas. O segredo legado observado no diagnóstico foi revogado antes de uso.
+Login/TLS, PostgreSQL 17.6 e baseline public vazio foram comprovados. EvoFlow foi
+reaplicado no projeto dedicado (17 migrations, runtime isolado). O bootstrap
+principal Auth/CRM/Core/Processor e seeds foi concluído sob host flock e advisory
+lock PostgreSQL, seguido dos grants de runtime.
+
+O smoke R2 enviou e leu 64 KiB sintéticos em cada bucket, conferiu checksum e URL
+assinada, negou acesso anônimo pelo endpoint S3 e negou cada credencial no bucket
+oposto. O painel confirmou `r2.dev` e custom domains desativados. Objetos de teste
+foram removidos; somente os marcadores de propriedade foram preservados.
 
 - **Implantado/testado:** hablas-evo-data-staging no servidor correto. Redis,
   RabbitMQ e ClickHouse healthy, limites reais confirmados, sem domínio/portas de host.
   UUID nrvbltvkzmzvivrbkldjok6y; volumes/rede em data-deployment.md.
-- **Banco:** EvoFlow migrado e runtime verificado; vector 0.8.2 e duas roles principais
-  preparados. Bootstrap principal no Supabase ainda pendente.
-- **CI:** run 34438052395 passou também no bootstrap Rails nativo e nos modelos
+- **Banco:** EvoFlow e principal migrados. A role principal real passou via TLS com
+  110 tabelas, CRUD, sem DDL, sem acesso a auth.users/EvoFlow e sem escrita nos históricos.
+- **CI:** run 34461735871 passou no bootstrap Rails nativo e nos modelos
   compartilhados. As diferenças entre dumps não foram mascaradas por history-stamping.
-- **Correção adicional em preparação:** o ADK do Processor usa asyncpg além de
-  psycopg2. O adapter agora remove parâmetros libpq da URL assíncrona e passa SSLContext
-  com verificação completa; três testes novos passaram. A próxima build precisa
-  incorporar essa correção antes de iniciar o Processor.
-- **Aplicação e frontend:** ainda não implantados. R2, URLs finais, setup/admin,
-  bootstrap completo, backups/restore e testes funcionais continuam pendentes.
+- **Processor:** Alembic e ADK usam opções nativas asyncpg com SSLContext e verificação
+  completa. O runner explícito foi comprovado no banco real; o probe ADK foi removido.
+- **Segredos:** após a última exposição operacional, todos os valores presentes no
+  Coolify foram rotacionados novamente. A chave Fernet tem 32 bytes em Base64 URL
+  com padding; 31 valores, serviços de dados e credencial migradora foram validados.
+- **Aplicação e frontend:** ainda não implantados. Integração R2, URLs finais, setup/admin,
+  backups/restore e testes funcionais continuam pendentes.
 - **Domínios:** crm.hablas.chat é o frontend desejado pelo responsável, sujeito à
   revisão do CNAME existente; nenhuma alteração DNS nesta etapa.
 
 Os checkpoints anteriores abaixo são históricos; esta seção e os documentos de
 evidência por componente representam o estado atual.
 
-## Atualização — 10/09/2026, avanço de banco e CI
+## Histórico — 10/09/2026, avanço inicial de banco e CI
 
-**Estado atual:** conexão Supabase validada; schema EvoFlow migrado e runtime
+**Estado naquele checkpoint:** conexão Supabase validada; schema EvoFlow migrado e runtime
 verificado; aplicação completa ainda não implantada. Esta seção atualiza o
 checkpoint inicial preservado abaixo.
 

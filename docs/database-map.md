@@ -1,6 +1,16 @@
-# Mapa de bancos — BLOCKED / PENDING_OWNER_INPUT
+# Mapa de bancos — staging dedicado validado
 
-## Atualização — conexão comprovada e isolamento autorizado
+## Atualização — projeto dedicado
+
+Com autorização posterior, `hablas-evo-staging` (`znxlfqctnezrropcbftw`) foi criado
+como o segundo projeto incluído no Free Plan. Data API e chaves JWT legadas estão
+desativadas. EvoFlow foi reaplicado e validado no schema próprio. O schema `public`
+foi carregado por CRM/Auth/Core/Processor, contém 110 tabelas e teve runtime isolado
+validado via TLS. O projeto
+`hablas-crm` descrito historicamente abaixo foi preservado sem limpeza e deixou de ser
+o destino do staging.
+
+## Histórico — conexão inicial e isolamento então autorizado
 
 Em 10/09/2026: projeto hablas-crm na organização Hablas, us-east-1, PostgreSQL 17.6.
 O MCP mostrou apenas schemas internos com tabelas e zero tabelas em public; vector
@@ -8,11 +18,12 @@ O MCP mostrou apenas schemas internos com tabelas e zero tabelas em public; vect
 em infra/certs/supabase-root-2021.crt. TLS e login administrativo PostgreSQL passaram
 via `aws-0-us-east-1.pooler.supabase.com:5432`, banco postgres.
 
-O responsável escolheu **um único projeto com schemas separados**. A divisão agora é:
+Naquele checkpoint, o responsável escolheu **um único projeto com schemas separados**.
+A divisão preservada no projeto dedicado é:
 
 | Schema | Consumidores | Isolamento |
 |---|---|---|
-| public | Auth/CRM/Sidekiq/Core/Processor | Preserva o compartilhamento do código; bootstrap principal ainda pendente |
+| public | Auth/CRM/Sidekiq/Core/Processor | 110 tabelas; runtime com CRUD, sem DDL e sem escrita nos históricos |
 | hablas_evoflow_staging | EvoFlow | Role e histórico TypeORM próprios; search_path sem public; runtime sem DDL |
 
 A adaptação de configuração usa `schema` do TypeORM e `options=-c search_path=...`

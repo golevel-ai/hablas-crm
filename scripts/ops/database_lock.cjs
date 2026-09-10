@@ -6,7 +6,7 @@ const key = "hashtextextended('hablas-evo-infra/staging/database',0)";
 async function main() {
   if (process.env.EVO_BOOTSTRAP_OWNER !== owner
       || process.env.POSTGRES_HOST !== 'aws-0-us-east-1.pooler.supabase.com'
-      || process.env.POSTGRES_USERNAME !== 'hablas_evo_stg_main_migrator.fizdiennudpyqrzmdukm') throw new Error('TARGET');
+      || process.env.POSTGRES_USERNAME !== 'hablas_evo_stg_main_migrator.znxlfqctnezrropcbftw') throw new Error('TARGET');
   const client = new Client({ host: process.env.POSTGRES_HOST, port: 5432, database: 'postgres',
     user: process.env.POSTGRES_USERNAME, password: process.env.POSTGRES_PASSWORD,
     ssl: { ca: fs.readFileSync('/ops/ca.crt', 'utf8'), rejectUnauthorized: true },

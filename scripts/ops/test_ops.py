@@ -27,6 +27,14 @@ class PolicyTests(unittest.TestCase):
                 with self.assertRaises(ops.Blocked):
                     ops.validate_target(target)
 
+    def test_wrong_supabase_project_fails(self):
+        for key in ("organization_id", "project_ref_owner_provided", "project_name"):
+            with self.subTest(key=key):
+                target = copy.deepcopy(self.target)
+                target["supabase"][key] = "wrong-destination"
+                with self.assertRaises(ops.Blocked):
+                    ops.validate_target(target)
+
     def test_cannot_relax_safety_with_truthy_strings(self):
         for value in (True, "false", 0, None):
             target = copy.deepcopy(self.target)
