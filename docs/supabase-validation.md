@@ -64,6 +64,12 @@ PASS via Session Pooler/TLS com a role hablas_evo_stg_flow:
 
 ## Pendências
 
+Atualização: vector 0.8.2 foi habilitado em extensions. Foram criadas as roles
+hablas_evo_stg_main_migrator (OID 17988, limite 3) e hablas_evo_stg_main
+(OID 17990, limite 40), sem superuser/createdb/createrole, com marcador e senhas
+próprios. Apenas grants de schema foram aplicados nesta preparação; o schema
+principal continua aguardando bootstrap. O EvoFlow manteve OID/17 migrations.
+
 Bootstrap principal Auth/CRM/Core/Processor, extensão vector para esse conjunto,
 runtime role principal, Data API/grants de public antes de armazenar dados,
 backup/restore e testes com todos os containers. Não classificar T03/T04 completos

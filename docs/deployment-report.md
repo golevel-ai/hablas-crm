@@ -1,5 +1,26 @@
 # Relatório de implantação — checkpoint de staging
 
+## Estado mais recente — dados implantados e preparação principal
+
+- **Implantado/testado:** hablas-evo-data-staging no servidor correto. Redis,
+  RabbitMQ e ClickHouse healthy, limites reais confirmados, sem domínio/portas de host.
+  UUID nrvbltvkzmzvivrbkldjok6y; volumes/rede em data-deployment.md.
+- **Banco:** EvoFlow migrado e runtime verificado; vector 0.8.2 e duas roles principais
+  preparados. Bootstrap principal no Supabase ainda pendente.
+- **CI:** run 34438052395 passou também no bootstrap Rails nativo e nos modelos
+  compartilhados. As diferenças entre dumps não foram mascaradas por history-stamping.
+- **Correção adicional em preparação:** o ADK do Processor usa asyncpg além de
+  psycopg2. O adapter agora remove parâmetros libpq da URL assíncrona e passa SSLContext
+  com verificação completa; três testes novos passaram. A próxima build precisa
+  incorporar essa correção antes de iniciar o Processor.
+- **Aplicação e frontend:** ainda não implantados. R2, URLs finais, setup/admin,
+  bootstrap completo, backups/restore e testes funcionais continuam pendentes.
+- **Domínios:** crm.hablas.chat é o frontend desejado pelo responsável, sujeito à
+  revisão do CNAME existente; nenhuma alteração DNS nesta etapa.
+
+Os checkpoints anteriores abaixo são históricos; esta seção e os documentos de
+evidência por componente representam o estado atual.
+
 ## Atualização — 10/09/2026, avanço de banco e CI
 
 **Estado atual:** conexão Supabase validada; schema EvoFlow migrado e runtime

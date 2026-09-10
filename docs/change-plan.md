@@ -7,6 +7,21 @@ Cloudflare GoLevel / hablas.chat, IDs em `infra/environment.target.yml`.
 
 ## Recursos propostos, sujeitos a preflight
 
+### Dados Coolify — preflight renovado em 10/09/2026 04:56Z
+
+Servidor/IP confirmados novamente, 9.629 MiB de memória disponível, 82 GB de disco
+livre, onze containers existentes saudáveis e nenhum volume com prefixo hablas-evo.
+Staging continua com zero recursos antes desta criação. Destino selecionado na UI:
+server_id 5, destination `eolu061gu7rqdmd7umerbmuu`, correspondente ao UUID fixado.
+
+Criar o recurso Compose de dados com o YAML público materializado a partir das
+configurações versionadas e digests verificados. SHA-256 do YAML enviado:
+`182ae9dd64cfdc3aea3a15f55d88b45a86168020ef8b4dbb490d83a07047ffbb`.
+O parser Compose 5.1.4 validou o resultado. Credenciais serão geradas uma vez e
+vinculadas ao UUID retornado antes do primeiro start. Nenhum domínio ou porta de
+host; limites novos de dados somam 2,5 GiB/1 CPU. Registrar UUID/volumes/rede e
+revalidar os recursos anteriores após a implantação.
+
 | Recurso | Nome proposto | Pré-condições |
 |---|---|---|
 | Projeto Coolify | hablas-evo-infra | Inventário de projetos completo, ausência de colisão |
@@ -56,6 +71,18 @@ Não repetir criação por nome; reconciliar IDs + marcador. Não há volumes, r
 container, Worker, DNS, bucket ou banco novo nesta execução.
 
 ## Sequência e travas
+
+### Acesso principal Supabase — preparação autorizada pela implantação
+
+O ensaio CI 34438052395 passou no bootstrap nativo Auth/CRM e nos modelos
+compartilhados, sem o comando de marcar migrations indiscriminadamente.
+Próxima escrita limitada: criar roles novas `hablas_evo_stg_main_migrator` e
+`hablas_evo_stg_main`, com marcador do projeto e senhas exclusivas. Limites 3 e
+40 conexões, sem SUPERUSER/CREATEDB/CREATEROLE; search_path public,extensions.
+O migrator recebe CREATE em public; runtime recebe apenas USAGE até os grants
+de tabelas posteriores. Habilitar vector em extensions, sem alterar tabelas
+existentes. Conferir public ainda vazio e EvoFlow OID 17494/17 migrations intactos
+sob a mesma trava de sessão. Nenhum schema load nesta operação.
 
 ### CI e GHCR — autorização explícita posterior
 

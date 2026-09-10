@@ -42,6 +42,7 @@ x-rails: &rails
   WEB_CONCURRENCY: "0"
   SIDEKIQ_CONCURRENCY: "3"
   SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Shared Rails secret required}
+  ENCRYPTION_KEY: ${ENCRYPTION_KEY:?Shared configuration encryption key required}
   JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Shared signing secret required}
   EVOAI_CRM_API_TOKEN: ${EVOAI_CRM_API_TOKEN:?Shared integration secret required}
   FRONTEND_URL: ${FRONTEND_ORIGIN:?Validated HTTPS frontend origin required}

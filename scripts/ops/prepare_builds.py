@@ -113,6 +113,7 @@ def transform(service, destination):
             replace(session, "key: '_evolution_session', same_site: :lax",
                     "key: '_hablas_evo_stg_crm_session', secure: true, httponly: true, same_site: :lax")
     elif service == "processor":
+        copy_overlay(destination, "processor-postgres-tls.py", "src/config/postgres_tls.py")
         main = destination / "src/main.py"
         replace(main, "Base.metadata.create_all(bind=engine, tables=_tables_to_create, checkfirst=True)",
                 "# Deployment schema is managed exclusively by the migration executor.\n"
@@ -132,6 +133,20 @@ def transform(service, destination):
                             "        # The private bucket must be provisioned separately with restricted credentials.\n"
                             "        if not self.client.bucket_exists(self.bucket_name):\n"
                             "            raise RuntimeError('Configured artifact bucket does not exist')\n\n" + text[end:])
+        provider = destination / "src/services/service_providers.py"
+        text = provider.read_text()
+        start = text.index("def get_async_db_url(")
+        end = text.index("# Initialize artifacts service using the factory")
+        provider.write_text(text[:start] +
+                            "from src.config.postgres_tls import async_connection_options\n\n"
+                            "def get_async_db_url(db_url: str) -> str:\n"
+                            "    return async_connection_options(db_url)[0]\n\n"
+                            "async_db_url, connect_args = async_connection_options(os.environ['POSTGRES_CONNECTION_STRING'])\n"
+                            "session_service = DatabaseSessionService(\n"
+                            "    db_url=async_db_url, connect_args=connect_args,\n"
+                            "    pool_pre_ping=True, pool_recycle=1800,\n"
+                            "    pool_size=5, max_overflow=0, pool_timeout=10,\n"
+                            ")\n\n" + text[end:])
     elif service == "evoflow":
         copy_overlay(destination, "evoflow-postgres.cjs", "deployment-postgres.cjs")
         (destination / "src/database/ormconfig.ts").write_text(

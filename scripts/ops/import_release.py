@@ -64,6 +64,7 @@ def main():
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--commit", required=True)
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--replace-candidate", action="store_true", help="Archive an older candidate before application creation")
     parser.add_argument("--dry-run", action="store_true", help="Verify only local artifact identities; no network or writes")
     args = parser.parse_args()
     try:
@@ -103,7 +104,14 @@ def main():
             images[service] = load(ROOT / "infra/build/oci.lock.json")["images"][service]
         if args.write:
             if lock.get("release", {}).get("infrastructure_commit") not in (None, args.commit):
-                raise Blocked("Another release is already recorded; preserve it before promotion")
+                existing_manifest = load(ROOT / "infra/deployment-manifest.yml")
+                if not args.replace_candidate or existing_manifest["coolify"].get("app_uuid"):
+                    raise Blocked("Another release is recorded; candidate replacement needs explicit flag and no application resource")
+                archive = ROOT / "infra/releases" / (lock["release"]["infrastructure_commit"] + ".json")
+                archive.parent.mkdir(exist_ok=True)
+                with archive.open("x") as out:
+                    json.dump({"release": lock["release"], "images": lock["images"]}, out, indent=2)
+                    out.write("\n")
             lock["images"] = images
             lock["image_status"] = "PUBLISHED_APPLICATION_IMAGES_VERIFIED_NOT_DEPLOYED"
             lock["release"] = {"infrastructure_commit": args.commit, "recipe_sha256": expected_recipe,

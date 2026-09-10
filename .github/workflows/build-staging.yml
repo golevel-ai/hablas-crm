@@ -6,6 +6,10 @@ on:
     paths:
       - infra/build/**
       - infra/tests/**
+      - infra/coolify/**
+      - infra/redis/**
+      - infra/rabbitmq/**
+      - infra/clickhouse/**
       - infra/versions.lock.yml
       - scripts/ops/**
       - .github/workflows/build-staging.yml

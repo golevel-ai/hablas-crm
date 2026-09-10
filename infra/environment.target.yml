@@ -8,6 +8,8 @@
     "server_uuid": "hwt9rmdg9rrodfb9hilh8vcn",
     "project_uuid": "jjxcrsedavkskvcbnuvmkaql",
     "environment_uuid": "xukzvsnkjemq085zitdzzytf",
+    "data_uuid": "nrvbltvkzmzvivrbkldjok6y",
+    "data_status": "RUNNING_HEALTHY_LIMITS_VERIFIED",
     "metadata_status": "STAGING_EMPTY_CREATED",
     "identity_status": "VERIFIED",
     "version_observed": "4.3.18"
@@ -36,7 +38,7 @@
     "region": "us-east-1",
     "postgres_version_observed": "17.6",
     "vector_version_available": "0.8.2",
-    "vector_installed": false,
+    "vector_installed": true,
     "public_tables_observed": 0,
     "isolation_decision": "OWNER_APPROVED_SINGLE_PROJECT_SEPARATE_SCHEMAS",
     "main_schema": "public",
@@ -49,8 +51,9 @@
       "port": 5432,
       "database": "postgres",
       "admin_username": "postgres.fizdiennudpyqrzmdukm",
-      "runtime_username": null,
-      "status": "ADMIN_LOGIN_TLS_VERIFIED_RUNTIME_ROLE_PENDING"
+      "runtime_username": "hablas_evo_stg_main.fizdiennudpyqrzmdukm",
+      "migration_username": "hablas_evo_stg_main_migrator.fizdiennudpyqrzmdukm",
+      "status": "MAIN_ROLES_CREATED_SCHEMA_BOOTSTRAP_PENDING"
     },
     "direct_connection": {
       "host": "db.fizdiennudpyqrzmdukm.supabase.co",
