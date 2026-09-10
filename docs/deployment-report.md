@@ -36,6 +36,8 @@ foram removidos; somente os marcadores de propriedade foram preservados.
 - **Segredos:** após a última exposição operacional, todos os valores presentes no
   Coolify foram rotacionados novamente. A chave Fernet tem 32 bytes em Base64 URL
   com padding; 31 valores, serviços de dados e credencial migradora foram validados.
+  Os dois tokens R2 também foram substituídos após exposição de cópias baixadas; os
+  anteriores foram excluídos, os substitutos repetiram o smoke e as cópias foram removidas.
 - **Aplicação e frontend:** ainda não implantados. Integração R2, URLs finais, setup/admin,
   backups/restore e testes funcionais continuam pendentes.
 - **Domínios:** crm.hablas.chat é o frontend desejado pelo responsável, sujeito à

@@ -20,6 +20,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--target', required=True, type=Path)
     parser.add_argument('--dry-run', action='store_true')
+    parser.add_argument('--credential-set', choices=('active', 'rotation'), default='active')
     args = parser.parse_args()
     try:
         validate_target(load(args.target))
@@ -31,7 +32,8 @@ def main():
             return 0
         clients = {}
         for kind in ('media', 'backups'):
-            filename = ROOT / '.ops-private/secrets' / ('r2-' + kind + '.json')
+            suffix = '.rotation' if args.credential_set == 'rotation' else ''
+            filename = ROOT / '.ops-private/secrets' / ('r2-' + kind + suffix + '.json')
             if filename.stat().st_mode & 0o077 or filename.is_symlink():
                 raise Blocked('R2 credential file must be regular and mode 0600')
             credential = load(filename)

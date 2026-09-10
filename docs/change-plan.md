@@ -91,6 +91,10 @@ nomes. Usar locationHint enam quando aceito, registrar criação e conferir publ
 access desligado, sem custom domains. Tokens devem permitir somente objetos do
 respectivo bucket. Nenhum bucket anterior será reutilizado ou alterado.
 
+Após exposição operacional das primeiras credenciais, ambos os tokens foram
+substituídos por novos tokens account-scoped de objetos, cada um limitado ao próprio
+bucket. O smoke completo passou novamente e os tokens anteriores foram excluídos.
+
 ### Acesso principal Supabase — concluído
 
 O ensaio CI 34438052395 passou no bootstrap nativo Auth/CRM e nos modelos
