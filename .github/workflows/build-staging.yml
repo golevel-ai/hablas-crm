@@ -23,6 +23,8 @@ jobs:
     if: github.repository == 'golevel-ai/hablas-crm' && github.ref == 'refs/heads/infra/staging-deployment'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    outputs:
+      build_images: ${{ steps.plan.outputs.build_images }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -32,6 +34,25 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20.20.0
+      - name: Reuse already verified images when only operational metadata changed
+        id: plan
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          sys.path.insert(0, 'scripts/ops')
+          from prepare_builds import RECIPES, recipe_digest
+          lock = json.loads(Path('infra/versions.lock.yml').read_text())
+          recipe = recipe_digest()
+          needed = lock.get('release', {}).get('recipe_sha256') != recipe
+          for service, (source, _) in RECIPES.items():
+              image = lock.get('images', {}).get(service, {})
+              commit = lock['commit'] if service == 'gateway' else lock['submodules'][source]
+              needed |= image.get('source_commit') != commit or image.get('recipe_sha256') != recipe
+              needed |= image.get('verification') != 'ANONYMOUS_PULL_AND_DIGEST_VERIFIED'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as out:
+              out.write(f"build_images={'true' if needed else 'false'}\n")
+          PY
       - name: Validate deployment policy and source identity
         run: |
           python3 -m unittest discover -s scripts/ops -p 'test_*.py' -v
@@ -59,6 +80,7 @@ jobs:
 
   images:
     needs: verify
+    if: needs.verify.outputs.build_images == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     permissions:
@@ -92,6 +114,14 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Refuse to overwrite an existing release tag
+        env:
+          IMAGE: ghcr.io/golevel-ai/hablas-evo-staging-${{ matrix.service }}:${{ github.sha }}
+        run: |
+          if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
+            echo 'Release tag already exists. Use a new reviewed infrastructure commit.' >&2
+            exit 1
+          fi
       - name: Build and publish only this release tag
         id: build
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
@@ -131,3 +161,31 @@ jobs:
           name: image-${{ matrix.service }}
           path: image-${{ matrix.service }}.json
           retention-days: 7
+
+  primary-bootstrap-contract:
+    needs: [verify, images]
+    if: always() && needs.verify.result == 'success' && (needs.images.result == 'success' || needs.images.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+          persist-credentials: false
+      - name: Select this build or the already verified immutable release
+        env:
+          BUILT: ${{ needs.verify.outputs.build_images }}
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          lock = json.loads(Path('infra/versions.lock.yml').read_text())
+          with open(os.environ['GITHUB_ENV'], 'a') as out:
+              for service in ('auth', 'crm'):
+                  reference = (f"ghcr.io/golevel-ai/hablas-evo-staging-{service}:{os.environ['GITHUB_SHA']}"
+                               if os.environ['BUILT'] == 'true' else lock['images'][service]['reference'])
+                  out.write(f'{service.upper()}_IMAGE={reference}\n')
+          PY
+      - name: Test primary bootstrap with no production credentials or external access
+        run: bash infra/tests/primary-bootstrap.sh

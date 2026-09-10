@@ -31,6 +31,22 @@ Evidência detalhada: `docs/supabase-validation.md`. Manifesto real e senhas fic
 fora do Git. Próxima etapa: executar CI autorizado, auditar/testar bootstrap principal
 e completar recursos de dados/R2, alocação e proteção dos hosts antes de iniciar a aplicação.
 
+### CI concluído e próxima prova de bootstrap
+
+O commit b242527 foi enviado para infra/staging-deployment. Run 34434439582 terminou
+success, incluindo as sete imagens. Após autorização explícita do responsável,
+a política GitHub Public foi habilitada e apenas os packages desta implantação
+foram publicados. Os sete digests passaram em verificação de acesso anônimo e
+hash/plataforma/proveniência; registros importados em versions.lock.yml.
+Detalhes: build-publication.md.
+
+A comparação estática dos dumps Rails encontrou 16 tabelas Auth compartilhadas
+dentro de 88 tabelas CRM, com cinco divergências: defaults de created_at/updated_at
+em installation_configs e PK/nullability/FK de user_tours. **Não foi usado o comando
+upstream de marcar todas as migrations Auth como aplicadas.** Um teste isolado de
+bootstrap principal e modelos cruzados está sendo acrescentado ao CI para verificar
+o caminho nativo de migrations antes de qualquer schema load no Supabase principal.
+
 **Data:** 09/09/2026, encerramento deste checkpoint aproximadamente 23:10
 America/Sao_Paulo (10/09/2026 UTC).
 **Estado:** preparação parcial + metadados de staging configurados.

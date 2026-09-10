@@ -57,6 +57,24 @@ container, Worker, DNS, bucket ou banco novo nesta execução.
 
 ## Sequência e travas
 
+### CI e GHCR — autorização explícita posterior
+
+O responsável autorizou branch/commit/push e build no GitHub Actions, com imagens
+públicas no GHCR. Branch criada: infra/staging-deployment; primeiro commit b242527.
+Run 34434439582 concluiu com sucesso: verificação + sete imagens.
+
+Foi descoberto bloqueio real da organização golevel-ai: Public desmarcado nas
+permissões de criação de packages; Private habilitado e Internal desmarcado.
+Os pacotes novos foram inicialmente criados privados pelo GHCR. A tentativa de
+cancelar o run encontrou-o já concluído; nenhum cancelamento ocorreu.
+
+O responsável **autorizou explicitamente ajustar a política da organização**.
+Mudança aprovada: habilitar Public em Package creation e tornar públicos somente
+os sete packages hablas-evo-staging-{gateway,auth,crm,core,processor,bot,evoflow}
+gerados por este run. Private, Internal e herança de acesso ficam com seus valores
+observados. Essa autorização tem escopo GitHub; não altera a política global
+Cloudflare, DNS ou Coolify. Conferir pull anônimo de cada digest após a alteração.
+
 ### Supabase — decisão posterior e próximo bootstrap limitado
 
 O responsável escolheu **usar somente o projeto atual**, autorizando avaliar/testar
