@@ -2,6 +2,13 @@
 
 ## Estado mais recente — dados implantados e preparação principal
 
+R2 atualizado: buckets privados hablas-evo-staging-media e hablas-evo-staging-backups
+criados na conta GoLevel, ENAM/Standard, sem r2.dev nem custom domains habilitados.
+Tokens de conta separados, restritos a objetos do respectivo bucket, foram gerados
+e guardados localmente em arquivos 0600, sem valores em logs/Git. Upload/restore
+ainda não testados. Release 38e99df passou no CI 34446396309; os sete novos digests
+foram verificados por acesso anônimo e o candidato anterior foi arquivado.
+
 - **Implantado/testado:** hablas-evo-data-staging no servidor correto. Redis,
   RabbitMQ e ClickHouse healthy, limites reais confirmados, sem domínio/portas de host.
   UUID nrvbltvkzmzvivrbkldjok6y; volumes/rede em data-deployment.md.

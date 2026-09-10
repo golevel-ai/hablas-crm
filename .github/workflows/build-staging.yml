@@ -186,7 +186,7 @@ jobs:
           from pathlib import Path
           lock = json.loads(Path('infra/versions.lock.yml').read_text())
           with open(os.environ['GITHUB_ENV'], 'a') as out:
-              for service in ('auth', 'crm'):
+              for service in ('auth', 'crm', 'core', 'processor'):
                   reference = (f"ghcr.io/golevel-ai/hablas-evo-staging-{service}:{os.environ['GITHUB_SHA']}"
                                if os.environ['BUILT'] == 'true' else lock['images'][service]['reference'])
                   out.write(f'{service.upper()}_IMAGE={reference}\n')

@@ -72,6 +72,16 @@ container, Worker, DNS, bucket ou banco novo nesta execução.
 
 ## Sequência e travas
 
+### R2 — autorização posterior do responsável
+
+O responsável autorizou criar hablas-evo-staging-media e hablas-evo-staging-backups,
+privados e exclusivos, com credenciais separadas e uso sintético de homologação.
+Foi informado que R2 cobra por uso após a franquia; nenhum addon foi autorizado.
+A conta GoLevel/ID foi reconfirmada e o inventário tinha quatro buckets, sem esses
+nomes. Usar locationHint enam quando aceito, registrar criação e conferir public
+access desligado, sem custom domains. Tokens devem permitir somente objetos do
+respectivo bucket. Nenhum bucket anterior será reutilizado ou alterado.
+
 ### Acesso principal Supabase — preparação autorizada pela implantação
 
 O ensaio CI 34438052395 passou no bootstrap nativo Auth/CRM e nos modelos
