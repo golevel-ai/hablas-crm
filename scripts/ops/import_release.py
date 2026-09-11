@@ -65,6 +65,9 @@ def main():
     parser.add_argument("--commit", required=True)
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--replace-candidate", action="store_true", help="Archive an older candidate before application creation")
+    parser.add_argument("--update-deployed-application", action="store_true",
+                         help="Allow replacing a release even though an application resource already exists; "
+                              "records verified images for a post-deployment rollout, it does not roll them out")
     parser.add_argument("--dry-run", action="store_true", help="Verify only local artifact identities; no network or writes")
     args = parser.parse_args()
     try:
@@ -103,17 +106,23 @@ def main():
         for service in ("redis", "rabbitmq", "clickhouse"):
             images[service] = load(ROOT / "infra/build/oci.lock.json")["images"][service]
         if args.write:
+            has_app = False
             if lock.get("release", {}).get("infrastructure_commit") not in (None, args.commit):
                 existing_manifest = load(ROOT / "infra/deployment-manifest.yml")
-                if not args.replace_candidate or existing_manifest["coolify"].get("app_uuid"):
-                    raise Blocked("Another release is recorded; candidate replacement needs explicit flag and no application resource")
+                has_app = bool(existing_manifest["coolify"].get("app_uuid"))
+                if not args.replace_candidate:
+                    raise Blocked("Another release is recorded; replacing it needs an explicit flag")
+                if has_app and not args.update_deployed_application:
+                    raise Blocked("An application resource already exists; pass --update-deployed-application "
+                                   "to record a post-deployment image update")
                 archive = ROOT / "infra/releases" / (lock["release"]["infrastructure_commit"] + ".json")
                 archive.parent.mkdir(exist_ok=True)
                 with archive.open("x") as out:
                     json.dump({"release": lock["release"], "images": lock["images"]}, out, indent=2)
                     out.write("\n")
             lock["images"] = images
-            lock["image_status"] = "PUBLISHED_APPLICATION_IMAGES_VERIFIED_NOT_DEPLOYED"
+            lock["image_status"] = ("PUBLISHED_APPLICATION_IMAGES_VERIFIED_PENDING_ROLLOUT" if has_app
+                                     else "PUBLISHED_APPLICATION_IMAGES_VERIFIED_NOT_DEPLOYED")
             lock["release"] = {"infrastructure_commit": args.commit, "recipe_sha256": expected_recipe,
                                "ci_run_id": args.run_id, "ci_url": run["url"]}
             save(ROOT / "infra/versions.lock.yml", lock)

@@ -127,7 +127,12 @@ def validate_release():
         git("merge-base", "--is-ancestor", lock["commit"], "HEAD")
         changed = git("diff", "--name-only", lock["commit"], "HEAD").splitlines()
         allowed = ("infra/", "scripts/ops/", "docs/", ".github/workflows/")
-        if any(p not in (".gitignore", "opencode.json") and not p.startswith(allowed) for p in changed):
+        # A gitlink pointer bump surfaces as the bare submodule path in this diff. It is
+        # not a free-form source-tree edit: the checks below independently confirm the
+        # working tree, the checked-out commit and infra/versions.lock.yml all agree, and
+        # the submodule's own file changes are never visible in this superproject diff.
+        allowed_exact = {".gitignore", "opencode.json", *lock["submodules"]}
+        if any(p not in allowed_exact and not p.startswith(allowed) for p in changed):
             raise Blocked("Application tree changed relative to the locked fork")
     observed = {}
     for row in git("submodule", "status", "--recursive").splitlines():
