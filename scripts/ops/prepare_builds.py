@@ -141,6 +141,11 @@ def transform(service, destination):
         else:
             replace(session, "key: '_evolution_session', same_site: :lax",
                     "key: '_hablas_evo_stg_crm_session', secure: true, httponly: true, same_site: :lax")
+            qrcodes = destination / "app/controllers/api/v1/evolution_go/qrcodes_controller.rb"
+            for prefix in ("parsed_response['data']", "parsed_response"):
+                for field, legacy in (("qrcode", "Qrcode"), ("code", "Code")):
+                    replace(qrcodes, f"{prefix}['{legacy}']",
+                            f"{prefix}['{field}'] || {prefix}['{legacy}']")
     elif service == "processor":
         copy_overlay(destination, "processor-postgres-tls.py", "src/config/postgres_tls.py")
         main = destination / "src/main.py"
