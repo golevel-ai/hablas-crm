@@ -268,3 +268,52 @@ ActionCable 101 com welcome/ping.
 Isso atualiza T01–T05 e o escopo navegador de T08/T09, mas não fecha o requisito
 completo. Backup/restore, reset de senha/SMTP, mídia após restart, canais,
 integrações, rollback, carga e aceite de negócio continuam bloqueando o GO final.
+
+## Atualização de execução — 10–11/09/2026: bump do CRM para o tip do develop
+
+A pedido do responsável, o submódulo `evo-ai-crm-community` avançou de `aa3d408`
+(v1.1.0) para `4083ddd` (tip de `origin/develop`, 56 commits acumulados). Não
+temos permissão de escrita em `evolution-foundation/evo-ai-crm-community`
+(confirmado via API: `push:false`); este avanço só move nosso ponteiro local, não
+mescla `develop` em `main` naquele repositório. `db/schema.rb` ficou byte-idêntico
+entre os dois commits — as três migrations tocadas foram refatoradas para um
+helper `ConcurrentIndexMigration` compartilhado, sem alterar o resultado final do
+schema — então nenhuma migração de banco foi necessária. Também não houve
+mudança de Gemfile nem de variável de ambiente nova.
+
+O CI (`build-staging.yml`, run `34548070889`) reconstruiu as sete imagens da
+release. Na primeira tentativa (run `34547822953`) o job `verify` falhou com
+`BLOCKED: Application tree changed relative to the locked fork`: `validate_release()`
+em `scripts/ops/ops.py` nunca havia processado um bump de submódulo antes e tratava
+o próprio caminho do submódulo como uma mudança de árvore não permitida, mesmo com
+`infra/versions.lock.yml` e o commit do submódulo já coerentes entre si. Corrigido
+permitindo correspondência exata aos caminhos declarados em
+`lock["submodules"]`; os dois controles seguintes na mesma função (conjunto
+recursivo de submódulos igual ao lock; HEAD de cada submódulo igual à revisão
+travada, sem alterações locais) continuam obrigatórios e não foram enfraquecidos.
+Reproduzido e corrigido localmente antes do reenvio; a segunda execução do CI
+passou.
+
+`scripts/ops/import_release.py` bloqueava qualquer substituição de release quando
+já existe `app_uuid` no manifesto — comportamento correto para o fluxo anterior à
+implantação, mas sem caminho para **promover uma imagem nova a uma aplicação já
+publicada**. Adicionada a flag explícita `--update-deployed-application`, que só
+libera essa substituição quando combinada com `--replace-candidate`; a release
+anterior (`425658c`) foi arquivada automaticamente em
+`infra/releases/425658c25a03f74a232098d4323c0ceb24463fa6.json`. As sete imagens
+foram verificadas por digest público linux/amd64 no GHCR antes da gravação.
+
+Rollout aplicado: `CRM_IMAGE` atualizado no Coolify e `Restart (pull latest)`
+executado; os nove containers foram recriados e ficaram `healthy`. Confirmado por
+dentro do container em execução que `lib/concurrent_index_migration.rb` existe
+(arquivo novo do commit `4083ddd`), comprovando que o runtime está no build novo,
+não apenas o valor da variável de ambiente. Nova aceitação em staging passou:
+login, `validate`, dashboard e chamadas autenticadas, logout, e handshake
+ActionCable 101. `infra/versions.lock.yml.image_status` está
+`PUBLISHED_APPLICATION_IMAGES_VERIFIED_DEPLOYED_TO_STAGING`.
+
+Observação operacional: durante esta janela, `my.golevel.ai` ficou temporariamente
+inacessível para este executor devido à regra de firewall "REGRA VPN" da zona
+`golevel.ai` (bloqueia todo acesso exceto a partir de quatro IPs cadastrados). Isso
+não foi contornado nem a regra foi alterada; o responsável reconectou a VPN para
+restaurar o acesso a partir de um IP já autorizado.

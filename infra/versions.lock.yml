@@ -116,7 +116,7 @@
       "status": "MANIFEST_VERIFIED_NOT_RUNTIME_TESTED"
     }
   },
-  "image_status": "PUBLISHED_APPLICATION_IMAGES_VERIFIED_PENDING_ROLLOUT",
+  "image_status": "PUBLISHED_APPLICATION_IMAGES_VERIFIED_DEPLOYED_TO_STAGING",
   "target_platform": "linux/amd64",
   "wrangler": "4.130.0",
   "frontend": {
