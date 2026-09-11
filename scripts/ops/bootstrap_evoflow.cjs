@@ -152,6 +152,7 @@ async function main() {
     await dataSource.query(`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA ${SCHEMA} TO ${RUNTIME}`);
     await dataSource.query(`GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA ${SCHEMA} TO ${RUNTIME}`);
     await dataSource.query(`REVOKE ALL ON ${SCHEMA}.migrations FROM ${RUNTIME}`);
+    await dataSource.query(`GRANT SELECT ON ${SCHEMA}.migrations TO ${RUNTIME}`);
     await dataSource.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA ${SCHEMA} GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${RUNTIME}`);
     await dataSource.query(`ALTER DEFAULT PRIVILEGES IN SCHEMA ${SCHEMA} GRANT USAGE, SELECT ON SEQUENCES TO ${RUNTIME}`);
     const after = (await admin.query("SELECT count(*)::int AS n FROM pg_tables WHERE schemaname='public'")).rows[0].n;

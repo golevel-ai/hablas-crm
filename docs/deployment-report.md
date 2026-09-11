@@ -249,3 +249,22 @@ Ambiente: staging proposto; release: commit acima; evidências desta sessão em 
 
 Sem esses passos, manter o ambiente administrativo vazio e o preflight remoto
 bloqueado. A configuração de MCP/API não comprova funcionamento do Evo.
+
+## Atualização de execução — 10/09/2026 18:47 UTC
+
+O relatório acima preserva a fotografia anterior. Depois dela, a release imutável
+`425658c25a03f74a232098d4323c0ceb24463fa6` passou no CI, foi implantada no Coolify
+e os nove containers ficaram healthy. O bootstrap criou um único super-admin e a
+segunda chamada foi recusada. Core TLS e o acesso somente leitura do runtime EvoFlow
+à metadata de migrations foram validados.
+
+Os hosts `evo-stg.hablas.chat` e `evo-api-stg.hablas.chat` foram publicados usando
+somente recursos Cloudflare já ativos. Nenhum plano/add-on foi habilitado; Access
+permanece inativo por decisão do responsável. Passaram TLS, health, CORS/preflight,
+negação 403 de origem não aprovada, login/validate/refresh/logout, dashboard e APIs
+autenticadas, setup-lock, navegação SPA, bloqueio de backend no host frontend e
+ActionCable 101 com welcome/ping.
+
+Isso atualiza T01–T05 e o escopo navegador de T08/T09, mas não fecha o requisito
+completo. Backup/restore, reset de senha/SMTP, mídia após restart, canais,
+integrações, rollback, carga e aceite de negócio continuam bloqueando o GO final.

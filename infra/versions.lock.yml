@@ -21,77 +21,77 @@
       "service": "auth",
       "source_path": "evo-auth-service-community",
       "source_commit": "851073dd1e6ff0dc26e2e5bc8f54efa427ca65a4",
-      "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-      "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
+      "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+      "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-auth@sha256:1db80d64da904449d40c754d508ccfde7f5878dd075123e94ad7e3cd5b35054b",
+      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-auth@sha256:6a8cf90d2042e855a635869050ddf064ee3462965768b1d05a58cfd227e4d966",
       "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
     },
     "crm": {
       "service": "crm",
       "source_path": "evo-ai-crm-community",
       "source_commit": "aa3d408b6e2c1033e9fea4a2222447c1826d6192",
-      "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-      "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
+      "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+      "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "docker/Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-crm@sha256:4d58ae28743b036bf940739a53ffd5fb6c5b56751230107218240f300113520a",
+      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-crm@sha256:477836452d325406836e41d5d70dd13ad88fbfd61f23c1b0fee36585ffa31c10",
       "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
     },
     "core": {
       "service": "core",
       "source_path": "evo-ai-core-service-community",
       "source_commit": "c6f7ba319c7e44c942ac9d6a7792e19109ebd2e1",
-      "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-      "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
+      "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+      "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-core@sha256:368c622eef8a1233c536a1cb44c9fa80131f1333e9e7d124d9ddabad2ef20830",
+      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-core@sha256:b8314d86c1d1f2c990547da27a5502b8fb9763bdca706519129189dddbf7b208",
       "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
     },
     "processor": {
       "service": "processor",
       "source_path": "evo-ai-processor-community",
       "source_commit": "a8e1bd444ced0f6dc3ccb31f20416f63e7048182",
-      "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-      "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
+      "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+      "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-processor@sha256:e4ddb8d359baabaf59ef7fc2011cc1f2986b2bcd21ecabc436aa8636e161b657",
+      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-processor@sha256:95c53ff1565c34613f1d375eb9f54104aa666ea40607b951785e17b2bfd772d5",
       "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
     },
     "gateway": {
       "service": "gateway",
       "source_path": "nginx",
       "source_commit": "fa6924df23b863de30b065d25e301bb414593bd5",
-      "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-      "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
+      "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+      "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-gateway@sha256:22d29a8c8d353ee553268e7cd4a3faa897bb6aa96b445e4f1b8f48991e68f374",
+      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-gateway@sha256:07e07fd1824602a794a9bf4c7f1b6e964ef1bd082ee6802c86243764457ef5a3",
       "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
     },
     "evoflow": {
       "service": "evoflow",
       "source_path": "evo-flow-community",
       "source_commit": "1734849b8afa03aceda37122a083d2fad7216098",
-      "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-      "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
+      "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+      "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-evoflow@sha256:1417d76a5215fade5176a0cdf98f9f904d05daed312eb6ba1f7c46bae4e5a902",
+      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-evoflow@sha256:de56f10a94ddf818c86a1342cdbdfe29e402cbc58fa652f917d0f164e1768cf6",
       "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
     },
     "bot": {
       "service": "bot",
       "source_path": "evo-bot-runtime",
       "source_commit": "7ec7db4761ca5bc8d09e4aa036398de2821c2e71",
-      "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-      "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
+      "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+      "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-bot@sha256:b36b49bec97357e14f6aeb212756b9e6335f08e941b1ea25b3c759ec87c1b8c3",
+      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-bot@sha256:25f87fa9291f9b43a75678e74f003fe47e5649ad8986007b6d9c055af62d42e0",
       "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
     },
     "redis": {
@@ -128,9 +128,9 @@
     "release_toolchain_status": "UNPINNED"
   },
   "release": {
-    "infrastructure_commit": "38e99dfd56811a2eaaf2727ea11b85416a1f1120",
-    "recipe_sha256": "a0ac62d2675ebf465522f10076a04e8b535a8939cf4253712ebb1366bde10af4",
-    "ci_run_id": "34446396309",
-    "ci_url": "https://github.com/golevel-ai/hablas-crm/actions/runs/34446396309"
+    "infrastructure_commit": "425658c25a03f74a232098d4323c0ceb24463fa6",
+    "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
+    "ci_run_id": "34509580709",
+    "ci_url": "https://github.com/golevel-ai/hablas-crm/actions/runs/34509580709"
   }
 }

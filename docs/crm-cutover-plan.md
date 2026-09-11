@@ -31,6 +31,20 @@ Após a liberação informada pelo responsável, às 15:13 UTC:
 Às 15:42 UTC, uma consulta read-only pela API Cloudflare confirmou zero registros
 DNS e zero Workers Custom Domains para os dois hosts finais e os dois hosts `-stg`.
 
+Às 18:47 UTC, a homologação foi publicada usando somente recursos já ativos, sem
+habilitar plano ou add-on Cloudflare: `evo-stg.hablas.chat` está anexado ao Worker
+`hablas-evo-frontend-staging` e `evo-api-stg.hablas.chat` aponta, com proxy ativo,
+para o gateway Coolify. O responsável determinou que nenhum recurso com custo seja
+ativado. O painel Cloudflare One exigia escolher um plano para criar Access; essa
+ativação não foi feita. A proteção de homologação usa autenticação da aplicação,
+signup desabilitado e setup já encerrado.
+
+Na conferência read-only após a publicação, o registro exato
+`email.crm.hablas.chat` não estava mais presente. Esta execução não alterou esse
+hostname e não há destino confiável para recriá-lo automaticamente. MX, SPF, DMARC
+e os registros DKIM do domínio raiz continuam presentes. Resolver essa divergência
+com o responsável de e-mail antes do GO final.
+
 O hostname está disponível, mas indisponível para clientes até o cutover. A
 remoção feita pelo responsável não comprova que o fornecedor anterior aceitará
 novamente esse domínio durante um rollback.
@@ -56,8 +70,9 @@ Sem estas decisões, o cutover permanece **NO-GO**.
 - Frontend final: Worker Static Assets em `crm.hablas.chat`, por Custom Domain
   exato. Cloudflare não permite criar Custom Domain sobre CNAME existente; o
   conflito foi removido, mas deve ser revalidado imediatamente antes da escrita.
-- Frontend de homologação: `evo-stg.hablas.chat`, protegido por Cloudflare Access
-  e sem rotas wildcard.
+- Frontend de homologação: `evo-stg.hablas.chat`, sem rotas wildcard. Por decisão
+  do responsável, Cloudflare Access não foi ativado; a autenticação da aplicação é
+  a barreira de acesso disponível no plano atual.
 - API de homologação: `evo-api-stg.hablas.chat`, terminando TLS no proxy Coolify e
   encaminhando somente ao gateway da stack.
 - API final: `api-crm.hablas.chat`, com DNS/TLS próprios no proxy Coolify antes de
@@ -113,9 +128,10 @@ Saída: release candidata reproduzível, sem qualquer hostname público de clien
    Auth, marcando `X-Forwarded-Proto: https`, com o segredo entregue por entrada
    protegida e sem logs. Confirmar que uma segunda chamada é recusada e que os grants
    de `super_admin` estão íntegros.
-4. Somente após fechar o bootstrap, publicar API e frontend nos dois hosts `-stg`,
-   ambos protegidos por Access. A API não pode ter bypass direto ao IP de origem;
-   automações sintéticas usam service token específico e de menor privilégio.
+4. Somente após fechar o bootstrap, publicar API e frontend nos dois hosts `-stg`.
+   Access permanece não ativado por restrição de custo; manter autenticação da
+   aplicação, signup desabilitado e setup fechado. A API não deve ser anunciada
+   como privada enquanto o IP de origem continuar acessível por Host header.
 5. Executar toda a matriz de aceite abaixo com dados e destinos sintéticos.
 6. Ensaiar rollback de imagem, Worker, banco restaurado e filas.
 
@@ -175,6 +191,20 @@ Saída: autorização explícita **GO**, com executor, observadores e horário.
   `/api/*` e ausência de credenciais/placeholders no bundle.
 
 ## Monitoramento e rollback
+
+### Aceite executado em staging em 10/09/2026
+
+Passaram: TLS e health públicos, CORS permitido e negação 403 para origem não
+aprovada, login, validate, refresh, APIs autenticadas do dashboard, navegação SPA,
+setup ativo redirecionado para a aplicação, logout e handshake ActionCable 101 com
+welcome/ping. O host frontend devolveu JSON 404 para caminho de backend, sem fallback
+HTML. O bundle CI teve 63 hashes e hash de árvore verificados antes do deploy.
+
+Permanece pendente o restante da matriz: reset de senha/SMTP, MFA quando habilitado,
+CRUD completo e RBAC de agente, Processor WebSocket, mídia após restart/redeploy,
+canais e integrações sintéticas, restore isolado, rollback e carga. O beacon de
+analytics já presente na zona é bloqueado pela CSP; isso gera aviso no console, sem
+impacto observado na aplicação. Staging parcial não constitui o GO final.
 
 Disparar rollback com qualquer perda/inconsistência de dados ou mídia, escrita no
 ambiente errado, falha de autenticação generalizada, quebra de canal crítico ou

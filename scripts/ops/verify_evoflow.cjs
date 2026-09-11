@@ -37,7 +37,8 @@ async function main() {
       has_schema_privilege(current_user, current_schema(), 'CREATE') AS can_ddl,
       has_table_privilege(current_user, (SELECT c.oid FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
         WHERE n.nspname='auth' AND c.relname='users'), 'SELECT') AS can_read_supabase_auth,
-      has_table_privilege(current_user, 'hablas_evoflow_staging.migrations', 'SELECT,INSERT,UPDATE,DELETE') AS can_change_migrations,
+      has_table_privilege(current_user, 'hablas_evoflow_staging.migrations', 'SELECT') AS can_read_migration_metadata,
+      has_table_privilege(current_user, 'hablas_evoflow_staging.migrations', 'INSERT,UPDATE,DELETE,TRUNCATE') AS can_change_migrations,
       has_table_privilege(current_user, 'hablas_evoflow_staging.contacts', 'SELECT') AS can_select,
       has_table_privilege(current_user, 'hablas_evoflow_staging.contacts', 'INSERT') AS can_insert,
       has_table_privilege(current_user, 'hablas_evoflow_staging.contacts', 'UPDATE') AS can_update,
@@ -46,7 +47,7 @@ async function main() {
     await runner.query('ROLLBACK');
     if (row.role !== 'hablas_evo_stg_flow' || row.schema !== 'hablas_evoflow_staging'
         || row.schema_oid !== manifest.supabase.evoflow.schema_oid || row.can_ddl
-        || row.can_read_supabase_auth || row.can_change_migrations
+        || row.can_read_supabase_auth || !row.can_read_migration_metadata || row.can_change_migrations
         || !row.can_select || !row.can_insert || !row.can_update || !row.can_delete) throw new Error('PRIVILEGES');
     console.log(JSON.stringify({ status: 'PASS', scope: 'actual Supabase runtime role via verified TLS', ...row }, null, 2));
   } finally {
