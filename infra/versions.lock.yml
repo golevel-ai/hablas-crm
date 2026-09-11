@@ -5,7 +5,7 @@
   "commit": "fa6924df23b863de30b065d25e301bb414593bd5",
   "submodules": {
     "evo-ai-core-service-community": "c6f7ba319c7e44c942ac9d6a7792e19109ebd2e1",
-    "evo-ai-crm-community": "aa3d408b6e2c1033e9fea4a2222447c1826d6192",
+    "evo-ai-crm-community": "4083dddb9bd7afd1152d6f41992225f1bfa410f5",
     "evo-ai-frontend-community": "20ba0e60e7b6d826ec3b937a0e22e901b2adca75",
     "evo-ai-processor-community": "a8e1bd444ced0f6dc3ccb31f20416f63e7048182",
     "evo-auth-service-community": "851073dd1e6ff0dc26e2e5bc8f54efa427ca65a4",
