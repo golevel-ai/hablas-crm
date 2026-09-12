@@ -1,6 +1,15 @@
 # Alocação de domínios — REVIEW_REQUIRED
 
-Owner: hablas-evo-infra / staging
+Owner: hablas-evo-infra / production
+
+> Atualização de 12/09/2026: `crm.hablas.chat` e `api-crm.hablas.chat` passaram de
+> "solicitados" a candidatos ativos em `infra/environment.target.yml`. Os hosts
+> `evo-stg`/`evo-api-stg` foram movidos para `cloudflare.retired_hosts` e continuam
+> publicados até a Fase 8 de `docs/production-rename-runbook.md`.
+>
+> `api-crm.hablas.chat` será publicado por Cloudflare Tunnel, não por registro A
+> para `51.81.80.55`. A verificação de conflito antes da escrita continua valendo e
+> agora inclui rotas de tunnel além de DNS, Workers, Pages, LB e Access.
 
 ## Destino de frontend informado posteriormente pelo responsável
 

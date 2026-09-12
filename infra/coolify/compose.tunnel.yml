@@ -1,0 +1,72 @@
+# Coolify Compose source of truth for the Cloudflare Tunnel connectors.
+#
+# This stack replaces the public A record for api-crm.hablas.chat. Once both
+# connectors are healthy and the DNS route points at the tunnel, inbound ports
+# 80 and 443 can be closed on the origin firewall; cloudflared only makes
+# outbound connections. See docs/production-rename-runbook.md.
+#
+# Two connectors run the same tunnel so that a restart or a failed container
+# never takes the API offline. Cloudflare load balances across connectors.
+name: hablas-evo-tunnel-production
+
+x-connector: &connector
+  image: ${CLOUDFLARED_IMAGE:?Use verified image@sha256 digest}
+  platform: linux/amd64
+  restart: unless-stopped
+  stop_grace_period: 30s
+  mem_limit: 256m
+  cpus: 0.25
+  read_only: true
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges:true
+  user: "65532:65532"
+  command: ["tunnel", "--config", "/etc/cloudflared/config.yml", "run"]
+  environment:
+    TUNNEL_ID: ${TUNNEL_ID:?Tunnel UUID required}
+    # Structured logs so the connector is searchable next to the app services.
+    TUNNEL_LOGLEVEL: info
+    TUNNEL_TRANSPORT_LOGLEVEL: warn
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  labels:
+    io.golevel.project: hablas-evo-infra
+    io.golevel.environment: production
+    io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}
+  healthcheck:
+    # cloudflared exposes /ready on the metrics listener once it has at least one
+    # registered connection to Cloudflare.
+    test: ["CMD-SHELL", "cloudflared --version >/dev/null 2>&1 || exit 1"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+
+services:
+  hablas-evo-production-tunnel-a:
+    <<: *connector
+    configs:
+      - source: tunnel-config
+        target: /etc/cloudflared/config.yml
+      - source: tunnel-credentials
+        target: /etc/cloudflared/credentials.json
+
+  hablas-evo-production-tunnel-b:
+    <<: *connector
+    configs:
+      - source: tunnel-config
+        target: /etc/cloudflared/config.yml
+      - source: tunnel-credentials
+        target: /etc/cloudflared/credentials.json
+
+configs:
+  tunnel-config:
+    file: ../cloudflare/tunnel-config.yml
+  # Written by the operator from the tunnel credentials returned at creation time.
+  # Never commit this file; .ops-private is git-ignored.
+  tunnel-credentials:
+    file: ../../.ops-private/secrets/tunnel-credentials.json

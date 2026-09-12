@@ -1,6 +1,17 @@
-# PREPARATION ONLY. No resources exist yet. Resolve digests and capacity before use.
 # Coolify Compose source of truth; no ports, external volumes or Swarm labels.
-name: hablas-evo-data-staging
+#
+# RENAME NOTICE (staging -> production): the service, hostname and volume names below
+# changed. Docker creates EMPTY volumes for the new names; it does not move data.
+# Before deploying this file, follow docs/production-rename-runbook.md:
+#   - Redis: drain Sidekiq and EvoFlow queues to zero, then copy hablas-evo-staging-redis
+#     into hablas-evo-production-redis. An empty volume loses every pending job.
+#   - RabbitMQ: RABBITMQ_NODENAME changed, so the previous Mnesia database is unreadable
+#     even if copied. Export definitions from the old node and import into the new one
+#     with publishers stopped and queues drained.
+#   - ClickHouse: copy hablas-evo-staging-clickhouse into hablas-evo-production-clickhouse,
+#     then rename the database and recreate the user grants. An empty volume loses every
+#     EvoFlow contact event.
+name: hablas-evo-data-production
 x-common: &common
   platform: linux/amd64
   restart: "on-failure:3"
@@ -12,11 +23,11 @@ x-common: &common
       max-file: "3"
   labels:
     io.golevel.project: hablas-evo-infra
-    io.golevel.environment: staging
+    io.golevel.environment: production
     io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}
 
 services:
-  hablas-evo-staging-redis:
+  hablas-evo-production-redis:
     <<: *common
     image: ${REDIS_IMAGE:?Use verified image@sha256 digest}
     mem_limit: 512m
@@ -35,16 +46,16 @@ services:
       timeout: 5s
       retries: 3
 
-  hablas-evo-staging-rabbitmq:
+  hablas-evo-production-rabbitmq:
     <<: *common
     image: ${RABBITMQ_IMAGE:?Use verified image@sha256 digest}
-    hostname: hablas-evo-staging-rabbitmq
+    hostname: hablas-evo-production-rabbitmq
     mem_limit: 512m
     cpus: 0.25
     environment:
-      RABBITMQ_NODENAME: rabbit@hablas-evo-staging-rabbitmq
-      RABBITMQ_DEFAULT_USER: hablas-evo-staging
-      RABBITMQ_DEFAULT_VHOST: hablas-evo-staging
+      RABBITMQ_NODENAME: rabbit@hablas-evo-production-rabbitmq
+      RABBITMQ_DEFAULT_USER: hablas-evo-production
+      RABBITMQ_DEFAULT_VHOST: hablas-evo-production
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?Dedicated credential required}
       RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:?Stable recovery secret required}
     configs:
@@ -59,14 +70,14 @@ services:
       retries: 3
       start_period: 60s
 
-  hablas-evo-staging-clickhouse:
+  hablas-evo-production-clickhouse:
     <<: *common
     image: ${CLICKHOUSE_IMAGE:?Use verified image@sha256 digest}
     mem_limit: 1536m
     cpus: 0.5
     environment:
-      CLICKHOUSE_DB: hablas_evo_staging
-      CLICKHOUSE_USER: hablas_evo_staging
+      CLICKHOUSE_DB: hablas_evo_production
+      CLICKHOUSE_USER: hablas_evo_production
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Dedicated credential required}
     configs:
       - source: clickhouse-config
@@ -94,14 +105,14 @@ configs:
 
 volumes:
   redis-data:
-    name: hablas-evo-staging-redis
+    name: hablas-evo-production-redis
     labels:
       io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}
   rabbitmq-data:
-    name: hablas-evo-staging-rabbitmq
+    name: hablas-evo-production-rabbitmq
     labels:
       io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}
   clickhouse-data:
-    name: hablas-evo-staging-clickhouse
+    name: hablas-evo-production-clickhouse
     labels:
       io.golevel.owner: ${DEPLOYMENT_OWNER:?Ownership marker required}

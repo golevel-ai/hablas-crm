@@ -1,6 +1,6 @@
 # Images MUST be built from prepare_builds.py contexts; see their hablas-build.json.
 # No Dockerfile/build here: release images are built outside the shared destination.
-name: hablas-evo-app-staging
+name: hablas-evo-app-production
 
 x-common: &common
   platform: linux/amd64
@@ -11,7 +11,7 @@ x-common: &common
     options: {max-size: "10m", max-file: "3"}
   labels:
     io.golevel.project: hablas-evo-infra
-    io.golevel.environment: staging
+    io.golevel.environment: production
     io.golevel.owner: ${DEPLOYMENT_OWNER:?Recorded ownership marker required}
 
 x-main-db: &main-db
@@ -78,6 +78,8 @@ x-crm-env: &crm-env
   BOT_RUNTIME_URL: ${BOT_INTERNAL_ORIGIN:?Observed internal DNS required}
   BOT_RUNTIME_POSTBACK_BASE_URL: ${CRM_INTERNAL_ORIGIN:?Observed internal DNS required}
   BOT_RUNTIME_SECRET: ${BOT_RUNTIME_SECRET:?Shared Bot secret required}
+  EVOLUTION_GO_API_URL: ${EVOLUTION_GO_API_URL:-}
+  EVOLUTION_GO_ADMIN_SECRET: ${EVOLUTION_GO_ADMIN_SECRET:-}
   EVO_FLOW_ENABLED: "true"
   EVO_FLOW_API_URL: ${EVOFLOW_INTERNAL_ORIGIN:?Observed internal DNS required}/api/v1
   EVO_FLOW_ALLOW_INSECURE: "true"
@@ -87,7 +89,7 @@ x-crm-env: &crm-env
   LOG_LEVEL: info
 
 services:
-  hablas-evo-staging-gateway:
+  hablas-evo-production-gateway:
     <<: *common
     image: ${GATEWAY_IMAGE:?Verified recipe image digest required}
     mem_limit: 128m
@@ -108,7 +110,7 @@ services:
       timeout: 5s
       retries: 3
 
-  hablas-evo-staging-auth:
+  hablas-evo-production-auth:
     <<: *common
     image: ${AUTH_IMAGE:?Verified recipe image digest required}
     entrypoint: ["sh", "infra/rails-entrypoint.sh"]
@@ -127,7 +129,7 @@ services:
       retries: 3
       start_period: 90s
 
-  hablas-evo-staging-auth-sidekiq:
+  hablas-evo-production-auth-sidekiq:
     <<: *common
     image: ${AUTH_IMAGE:?}
     entrypoint: ["sh", "infra/rails-entrypoint.sh"]
@@ -146,7 +148,7 @@ services:
       retries: 3
       start_period: 90s
 
-  hablas-evo-staging-crm:
+  hablas-evo-production-crm:
     <<: *common
     image: ${CRM_IMAGE:?Verified recipe image digest required}
     entrypoint: ["sh", "infra/rails-entrypoint.sh"]
@@ -163,7 +165,7 @@ services:
       retries: 3
       start_period: 90s
 
-  hablas-evo-staging-crm-sidekiq:
+  hablas-evo-production-crm-sidekiq:
     <<: *common
     image: ${CRM_IMAGE:?}
     entrypoint: ["sh", "infra/rails-entrypoint.sh"]
@@ -180,7 +182,7 @@ services:
       retries: 3
       start_period: 90s
 
-  hablas-evo-staging-core:
+  hablas-evo-production-core:
     <<: *common
     image: ${CORE_IMAGE:?Verified recipe image digest required}
     command: ["./main"]
@@ -216,7 +218,7 @@ services:
       retries: 3
       start_period: 30s
 
-  hablas-evo-staging-processor:
+  hablas-evo-production-processor:
     <<: *common
     image: ${PROCESSOR_IMAGE:?Verified recipe image digest required}
     command: ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
@@ -261,7 +263,7 @@ services:
       retries: 3
       start_period: 60s
 
-  hablas-evo-staging-bot:
+  hablas-evo-production-bot:
     <<: *common
     image: ${BOT_IMAGE:?Verified recipe image digest required}
     mem_limit: 128m
@@ -280,7 +282,7 @@ services:
       retries: 3
       start_period: 30s
 
-  hablas-evo-staging-evoflow:
+  hablas-evo-production-evoflow:
     <<: *common
     image: ${EVOFLOW_IMAGE:?Verified TLS recipe image digest required}
     command: ["node", "dist/main.js"]
@@ -296,7 +298,7 @@ services:
       POSTGRES_DB_HOST: ${MAIN_DB_HOST:?}
       POSTGRES_DB_PORT: ${MAIN_DB_PORT:?}
       POSTGRES_DB_DATABASE: ${MAIN_DB_NAME:?}
-      POSTGRES_DB_SCHEMA: hablas_evoflow_staging
+      POSTGRES_DB_SCHEMA: hablas_evoflow_production
       POSTGRES_DB_USERNAME: ${FLOW_DB_USER:?}
       POSTGRES_DB_PASSWORD: ${FLOW_DB_PASSWORD:?}
       POSTGRES_SSLMODE: verify-full
@@ -315,8 +317,8 @@ services:
       RABBITMQ_URL: ${RABBITMQ_URL:?Authenticated dedicated-vhost URI required}
       CLICKHOUSE_HOST: ${CLICKHOUSE_HOST:?Observed data-resource DNS required}
       CLICKHOUSE_PORT: "8123"
-      CLICKHOUSE_DATABASE: hablas_evo_staging
-      CLICKHOUSE_USERNAME: hablas_evo_staging
+      CLICKHOUSE_DATABASE: hablas_evo_production
+      CLICKHOUSE_USERNAME: hablas_evo_production
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?}
       CLICKHOUSE_TABLE: contact_events
     configs:
@@ -334,6 +336,6 @@ configs:
 
 volumes:
   processor-logs:
-    name: hablas-evo-staging-processor-logs
+    name: hablas-evo-production-processor-logs
     labels:
       io.golevel.owner: ${DEPLOYMENT_OWNER:?}

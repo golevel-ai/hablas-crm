@@ -72,11 +72,82 @@ class PolicyTests(unittest.TestCase):
 
     def test_apex_existing_and_wildcard_hosts_rejected(self):
         for host in ("hablas.chat", "www.hablas.chat", "evo.hablas.chat",
-                     "*.hablas.chat", "evo-stg.hablas.chat.evil.test"):
+                     "*.hablas.chat", "crm.hablas.chat.evil.test",
+                     "evo-stg.hablas.chat"):
             target = copy.deepcopy(self.target)
             target["cloudflare"]["frontend_candidate"] = host
             with self.assertRaises(ops.Blocked):
                 ops.validate_target(target)
+
+    def test_candidates_must_match_the_approved_customer_hosts(self):
+        target = copy.deepcopy(self.target)
+        target["cloudflare"]["api_candidate"] = target["cloudflare"]["frontend_candidate"]
+        with self.assertRaises(ops.Blocked):
+            ops.validate_target(target)
+
+    def test_retired_staging_hosts_stay_recorded_and_separate(self):
+        for value in (None, [], ["crm.hablas.chat"], ["evo.hablas.chat"]):
+            with self.subTest(retired=value):
+                target = copy.deepcopy(self.target)
+                target["cloudflare"]["retired_hosts"] = value
+                with self.assertRaises(ops.Blocked):
+                    ops.validate_target(target)
+
+    def test_tunnel_policy_is_enforced(self):
+        for key, value in (
+            ("mode", "DIRECT_ORIGIN"),
+            ("name", "hablas-evo-staging"),
+            ("ingress_target", "http://51.81.80.55:80"),
+            ("ingress_target", "https://hablas-evo-production-gateway:80"),
+            ("replicas", 1),
+            ("replicas", "2"),
+        ):
+            with self.subTest(key=key, value=value):
+                target = copy.deepcopy(self.target)
+                target["cloudflare"]["tunnel"][key] = value
+                with self.assertRaises(ops.Blocked):
+                    ops.validate_target(target)
+
+    def test_tunnel_block_is_required(self):
+        target = copy.deepcopy(self.target)
+        target["cloudflare"].pop("tunnel")
+        with self.assertRaises(ops.Blocked):
+            ops.validate_target(target)
+
+    def test_origin_ports_cannot_be_closed_before_the_tunnel_exists(self):
+        target = copy.deepcopy(self.target)
+        target["cloudflare"]["tunnel"]["origin_ports_closed"] = True
+        with self.assertRaises(ops.Blocked):
+            ops.validate_target(target)
+
+    def test_pre_rename_images_block_remote_deployment(self):
+        reasons = ops.unverified_production_images()
+        self.assertTrue(reasons, "rename must invalidate the staging image digests")
+        for service in ("auth", "crm", "core", "processor", "gateway", "bot", "evoflow"):
+            with self.subTest(service=service):
+                self.assertTrue(any(r.startswith(service + " ") for r in reasons))
+
+    def test_verified_production_images_clear_the_block(self):
+        lock = ops.load(ops.ROOT / "infra/versions.lock.yml")
+        digest = "@sha256:" + "0" * 64
+        for service, image in lock["images"].items():
+            if str(image.get("target_package", "")).startswith("ghcr.io/golevel-ai/hablas-evo-"):
+                image["reference"] = f"ghcr.io/golevel-ai/hablas-evo-production-{service}{digest}"
+                image["verification"] = "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+        with patch.object(ops, "load", return_value=lock):
+            self.assertEqual(ops.unverified_production_images(), [])
+
+    def test_unverified_digest_under_the_right_package_still_blocks(self):
+        lock = ops.load(ops.ROOT / "infra/versions.lock.yml")
+        digest = "@sha256:" + "0" * 64
+        for service, image in lock["images"].items():
+            if str(image.get("target_package", "")).startswith("ghcr.io/golevel-ai/hablas-evo-"):
+                image["reference"] = f"ghcr.io/golevel-ai/hablas-evo-production-{service}{digest}"
+                image["verification"] = "PENDING_PRODUCTION_REBUILD"
+        with patch.object(ops, "load", return_value=lock):
+            reasons = ops.unverified_production_images()
+        self.assertTrue(all("not verified after the rename" in r for r in reasons))
+        self.assertEqual(len(reasons), 7)
 
     def test_supabase_pending_stops_remote_before_any_api_call(self):
         self.target["supabase"]["status"] = "PENDING_OWNER_INPUT"
@@ -136,7 +207,7 @@ class PolicyTests(unittest.TestCase):
         ))
 
     def test_ci_remote_writes_are_policy_gated(self):
-        workflow = (ops.ROOT / ".github/workflows/build-staging.yml").read_text()
+        workflow = (ops.ROOT / ".github/workflows/build-production.yml").read_text()
         self.assertIn("- infra/environment.target.yml", workflow)
         self.assertIn("remote_writes_authorized={'true' if remote_writes_authorized else 'false'}", workflow)
         self.assertIn("if: steps.plan.outputs.remote_writes_authorized == 'true'", workflow)
@@ -145,6 +216,24 @@ class PolicyTests(unittest.TestCase):
             "needs.verify.outputs.build_images == 'true'",
             workflow,
         )
+
+    def test_ci_publishes_only_production_images_and_origins(self):
+        workflow = (ops.ROOT / ".github/workflows/build-production.yml").read_text()
+        self.assertNotIn("hablas-evo-staging-", workflow)
+        self.assertNotIn("evo-api-stg.hablas.chat", workflow)
+        self.assertIn("ghcr.io/golevel-ai/hablas-evo-production-", workflow)
+        self.assertIn("VITE_API_URL: https://api-crm.hablas.chat", workflow)
+        self.assertIn("VITE_APP_ENV: production", workflow)
+
+    def test_compose_files_carry_no_staging_identifiers(self):
+        for name in ("compose.app.yml", "compose.data.yml"):
+            with self.subTest(compose=name):
+                text = (ops.ROOT / "infra/coolify" / name).read_text()
+                body = "\n".join(
+                    line for line in text.splitlines() if not line.lstrip().startswith("#")
+                )
+                self.assertNotIn("staging", body)
+                self.assertNotIn("_stg_", body)
 
 
 class InventoryTests(unittest.TestCase):

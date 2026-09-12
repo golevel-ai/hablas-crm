@@ -1,8 +1,19 @@
 # Plano de cutover de crm.hablas.chat
 
-Estado: **EXECUCAO AUTORIZADA / staging antes do GO final**
+Estado: **EXECUCAO AUTORIZADA / rename fisico + GO final na mesma janela**
 Owner: hablas-evo-infra
-Destino: Evo CRM staging isolado
+Destino: Evo CRM producao
+
+> Atualizacao de 12/09/2026: o responsavel autorizou o rename fisico completo de
+> staging para producao junto com o cutover, e a substituicao do registro A da API
+> por um Cloudflare Tunnel. Os passos de migracao de dados que isso exige (bucket
+> R2, Mnesia do RabbitMQ, roles Postgres e volumes Docker) estao em
+> `docs/production-rename-runbook.md` e sao pre-requisito dos Gates C e D abaixo.
+>
+> O ensaio de backup/restore foi declarado pelo responsavel como ja realizado fora
+> deste repositorio, sem evidencia registrada. O estado gravado e
+> `OWNER_ATTESTED_EVIDENCE_PENDING`, nao `VERIFIED`: o bloqueio operacional abaixo
+> permanece valido ate que data, destino e RPO/RTO medidos sejam registrados.
 
 Decisões do responsável em 10/09/2026: instalação nova sem migração de dados,
 API final em `api-crm.hablas.chat` e autorização total para staging e publicação
@@ -68,15 +79,20 @@ Sem estas decisões, o cutover permanece **NO-GO**.
 ## Arquitetura de publicação
 
 - Frontend final: Worker Static Assets em `crm.hablas.chat`, por Custom Domain
-  exato. Cloudflare não permite criar Custom Domain sobre CNAME existente; o
-  conflito foi removido, mas deve ser revalidado imediatamente antes da escrita.
+  exato, servido pelo Worker `hablas-evo-frontend-production`. Cloudflare não
+  permite criar Custom Domain sobre CNAME existente; o conflito foi removido, mas
+  deve ser revalidado imediatamente antes da escrita.
 - Frontend de homologação: `evo-stg.hablas.chat`, sem rotas wildcard. Por decisão
   do responsável, Cloudflare Access não foi ativado; a autenticação da aplicação é
   a barreira de acesso disponível no plano atual.
 - API de homologação: `evo-api-stg.hablas.chat`, terminando TLS no proxy Coolify e
   encaminhando somente ao gateway da stack.
-- API final: `api-crm.hablas.chat`, com DNS/TLS próprios no proxy Coolify antes de
-  anexar o frontend final ao Worker.
+- API final: `api-crm.hablas.chat`, publicada por **Cloudflare Tunnel** em vez de um
+  registro A para o IP da origem. O `cloudflared` roda em dois conectores na VPS e
+  encaminha somente para `http://hablas-evo-production-gateway:80` pela rede Docker.
+  Isso remove o acesso direto ao IP por Host header apontado no bloqueio 4 do Gate B
+  e permite fechar as portas 80/443 na origem após a janela de observação. A
+  latência não melhora: o túnel adiciona um hop e o ganho é de superfície de ataque.
 - Banco/filas/storage: recursos dedicados já preparados, sem reutilizar o CRM
   anterior.
 - O browser usa origens base sem `/api/v1`; o gateway atende API, `/cable`, OAuth,
@@ -101,8 +117,14 @@ origens Vite são compiladas no bundle; trocar DNS não altera o bundle existent
    e `/api/v1/campaigns`; a imagem final ainda precisa de CI e verificação do digest.
 5. Login social Devise permanece fora do lançamento. Não expor `/auth/*` até
    implementar state/CSRF, bloquear signup indevido e aplicar rate limit.
-6. **Bloqueado operacionalmente:** backup e restore reais continuam não ensaiados. Smoke R2 de objeto não é
-   evidência de recuperação da aplicação.
+6. **Bloqueado operacionalmente:** o responsável declarou em 12/09/2026 que backup e
+   restore foram ensaiados fora deste repositório, sem fornecer evidência. Smoke R2
+   de objeto não é evidência de recuperação da aplicação. Registrar data, destino
+   isolado e RPO/RTO medidos em `docs/backup-restore.md` antes da janela; até lá o
+   rename físico da Fase 5 do runbook opera sem recuperação comprovada.
+7. **Novo com o rename físico:** bucket R2, base Mnesia do RabbitMQ, roles Postgres
+   e volumes Docker gravam o identificador antigo nos próprios dados e não aceitam
+   rename no lugar. Ver `docs/production-rename-runbook.md`.
 
 Cada correção exige teste de contrato e uma nova release imutável antes de criar
 recursos públicos.
@@ -140,12 +162,19 @@ vínculo com o Worker.
 
 ### Gate C: fresh start e preparação final
 
+0. Executar as Fases 1 a 6 de `docs/production-rename-runbook.md`: imagens de
+   produção verificadas, bucket R2 copiado, roles Postgres criadas, filas drenadas,
+   volumes movidos e a stack `hablas-evo-app-production` saudável. O preflight
+   remoto recusa enquanto `infra/versions.lock.yml` apontar para pacotes pré-rename.
 1. Preservar um export do CRM anterior apenas como evidência/fallback, se disponível;
    não importar dados no Evo conforme a decisão de fresh start.
 2. Criar e validar contas novas, dados sintéticos e configuração inicial. Comunicar
    que sessões, senhas, histórico, mídia e configurações anteriores não continuam.
-3. Criar o DNS/domínio Coolify de `api-crm.hablas.chat`, aguardar TLS válido e
-   executar os testes da API antes de publicar `crm.hablas.chat`.
+3. Criar o tunnel `hablas-evo-production`, subir os dois conectores e criar a rota
+   DNS de `api-crm.hablas.chat` para o tunnel. Executar os testes da API pelo
+   hostname final — incluindo `wss://.../cable` e o streaming SSE do processor, que
+   são os que mais expõem erro de configuração de túnel — antes de publicar
+   `crm.hablas.chat`.
 4. Atualizar callbacks OAuth e webhooks para a API nova apenas na janela aprovada.
 5. Gerar bundle final apontando para as origens finais e verificar ausência de
    placeholders, `.invalid`, localhost e segredos.
@@ -166,6 +195,9 @@ Saída: autorização explícita **GO**, com executor, observadores e horário.
 4. Aguardar certificado ativo e validar DNS em resolvedores independentes.
 5. Executar smoke anônimo e autenticado antes de anunciar disponibilidade.
 6. Monitorar continuamente pelo período aprovado; não remover o fallback antigo.
+7. Manter as portas 80/443 da origem abertas durante a observação. Fechá-las e
+   marcar `cloudflare.tunnel.origin_ports_closed` só na Fase 8 do runbook: enquanto
+   abertas, o caminho de rollback direto continua disponível.
 
 ## Matriz mínima de aceite
 
@@ -245,10 +277,13 @@ Nunca reverter schema ou restaurar banco automaticamente durante esse procedimen
 
 ## Aprovações separadas
 
-- **Aprovação 1:** criar recursos de homologação `evo-stg`/`evo-api-stg`.
+- **Aprovação 1:** criar recursos de homologação `evo-stg`/`evo-api-stg`. *(concedida)*
 - **Aprovação 2:** criar `api-crm`, provisionar o fresh start e alterar callbacks externos.
 - **Aprovação 3:** anexar `crm.hablas.chat` ao Worker final.
 - **Aprovação 4:** retirar o fallback após o período de observação.
+- **Aprovação 5:** executar o rename físico (R2, RabbitMQ, roles Postgres, volumes),
+  que envolve indisponibilidade e movimentação de dados sem rename reversível.
+- **Aprovação 6:** fechar as portas 80/443 da origem após a observação do tunnel.
 
 A liberação do registro DNS pelo responsável não substitui estas quatro aprovações.
 

@@ -1,11 +1,16 @@
 # Runbook frontend Workers — publicação autorizada por gates
 
-Conta GoLevel confirmada; IDs no target e Wrangler. O bloco principal representa
-staging e `env.production` reserva o nome final; a configuração versionada não contém
-rota ou Custom Domain e mantém workers.dev e preview URLs desabilitados. O Worker
-staging foi publicado a partir do artefato CI e seu Custom Domain foi anexado por
-flag explícita; produção permanece sem Worker/domínio. Wrangler 4.130.0 usa Node
-22.19.0 no CI; o build frontend permanece em Node 20.20.0.
+Conta GoLevel confirmada; IDs no target e Wrangler. Desde 12/09/2026 o bloco
+principal de `wrangler.jsonc` chama-se `hablas-evo-frontend-production`: o rename
+físico de staging para produção foi autorizado. A configuração versionada continua
+sem rota ou Custom Domain e mantém workers.dev e preview URLs desabilitados.
+Wrangler 4.130.0 usa Node 22.19.0 no CI; o build frontend permanece em Node 20.20.0.
+
+O Worker `hablas-evo-frontend-staging` e seu Custom Domain `evo-stg.hablas.chat`
+continuam publicados e só serão removidos na Fase 8 de
+`docs/production-rename-runbook.md`. Publicar sob o nome novo cria um Worker novo,
+sem o histórico de versões do anterior: o rollback de versão documentado em
+`docs/rollback.md` não atravessa o rename.
 
 ## Inventário
 
@@ -28,10 +33,12 @@ Falta de leitura de uma categoria bloqueia o inventário automatizado.
 ## Build auditado
 
 Gerenciador selecionado por Dockerfile: npm e package-lock.json (há também pnpm lock,
-não foi usado). O build TypeScript + Vite local concluiu com Node 20.20.0 e todas as
-origens em `evo-api-stg.hablas.chat`; o scanner não encontrou placeholder, `.invalid`
-ou localhost API ativo. O CI reproduziu e publicou o dist + manifesto SHA-256 como
-artefato imutável antes do deploy de staging.
+não foi usado). O bundle de produção deve ser gerado por
+`.github/workflows/build-production.yml`, com todas as origens em
+`api-crm.hablas.chat` e `VITE_APP_ENV=production`; o scanner recusa placeholder,
+`.invalid` ou localhost API ativo. As origens Vite são compiladas no bundle: o
+artefato de homologação apontando para `evo-api-stg.hablas.chat` **não** pode ser
+reaproveitado no host final apenas trocando DNS.
 
 O cliente acrescenta `/api/v1`; ActionCable converte a origem e acrescenta `/cable`.
 Não repetir sufixos. VITE_EVOFLOW_API_URL continua necessária para campaignsService;
@@ -75,5 +82,23 @@ as rotas permanecem vazias no arquivo versionado para evitar publicação aciden
 O account_id explícito não protege sozinho contra colisão de Worker nem substitui
 inventário/manifesto.
 
+## Cloudflare Tunnel para a API
+
+A API final não usa registro A para o IP da origem. `infra/cloudflare/tunnel-config.yml`
+define as regras de ingress em versionamento, em vez do painel, para que cada mudança
+seja revisável; `infra/coolify/compose.tunnel.yml` sobe dois conectores `cloudflared`.
+
+- Regra única: `api-crm.hablas.chat` → `http://hablas-evo-production-gateway:80`.
+  Qualquer outra requisição que chegue ao conector recebe 404, em vez de alcançar
+  um origin não previsto.
+- `keepAliveTimeout` sobe para 5m: `/cable` e o SSE do processor mantêm conexões
+  muito acima do padrão de 1m30s. Isso governa o pool ocioso, não o stream ativo.
+- Dois conectores são obrigatórios. Um único `cloudflared` torna a API inteira
+  dependente de um container; `scripts/ops/ops.py` recusa `replicas < 2`.
+- As portas 80/443 da origem só podem ser fechadas depois da janela de observação.
+  O guard recusa marcar `origin_ports_closed` enquanto `tunnel.id` for `null`.
+
 Referências conferidas: Workers Static Assets, SPA routing, `_headers`, Wrangler
-configuration e Workers best practices em developers.cloudflare.com.
+configuration, Workers best practices e Tunnel origin parameters
+(https://developers.cloudflare.com/tunnel/reference/origin-parameters/) em
+developers.cloudflare.com.

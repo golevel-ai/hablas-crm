@@ -30,7 +30,7 @@ test('backend paths cannot fall through to the SPA', async () => {
     '/webhooks/test',
   ]) {
     assert.equal(isBackendPath(path), true);
-    const response = await worker.fetch(new Request(`https://evo-stg.hablas.chat${path}`), env);
+    const response = await worker.fetch(new Request(`https://crm.hablas.chat${path}`), env);
     assert.equal(response.status, 404);
     assert.equal(response.headers.get('content-type'), 'application/json');
     assert.equal(response.headers.get('cache-control'), 'no-store');
@@ -40,14 +40,14 @@ test('backend paths cannot fall through to the SPA', async () => {
 test('frontend setup pages remain SPA routes', async () => {
   for (const path of ['/setup', '/setup/onboarding']) {
     assert.equal(isBackendPath(path), false);
-    const response = await worker.fetch(new Request(`https://evo-stg.hablas.chat${path}`), env);
+    const response = await worker.fetch(new Request(`https://crm.hablas.chat${path}`), env);
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('content-type'), 'text/html');
   }
 });
 
 test('regular SPA responses receive restrictive security headers', async () => {
-  const response = await worker.fetch(new Request('https://evo-stg.hablas.chat/conversations'), env);
+  const response = await worker.fetch(new Request('https://crm.hablas.chat/conversations'), env);
   const csp = response.headers.get('content-security-policy');
 
   assert.equal(response.status, 200);
@@ -59,7 +59,7 @@ test('regular SPA responses receive restrictive security headers', async () => {
 });
 
 test('widget remains embeddable without dropping the remaining CSP', async () => {
-  const response = await worker.fetch(new Request('https://evo-stg.hablas.chat/widget/demo'), env);
+  const response = await worker.fetch(new Request('https://crm.hablas.chat/widget/demo'), env);
   const csp = response.headers.get('content-security-policy');
 
   assert.equal(response.headers.get('x-frame-options'), null);
@@ -68,6 +68,6 @@ test('widget remains embeddable without dropping the remaining CSP', async () =>
 });
 
 test('non-read methods are rejected before asset lookup', async () => {
-  const response = await worker.fetch(new Request('https://evo-stg.hablas.chat/', { method: 'POST' }), env);
+  const response = await worker.fetch(new Request('https://crm.hablas.chat/', { method: 'POST' }), env);
   assert.equal(response.status, 405);
 });

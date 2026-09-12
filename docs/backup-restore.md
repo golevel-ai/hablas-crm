@@ -1,7 +1,16 @@
 # Backup e recuperação — procedimento a concretizar
 
-Estado: **BLOCKED**, sem destino/credencial independente nem ambiente de recuperação.
-Nenhum backup, restore ou teste de perda de dados foi executado. RPO/RTO não medidos.
+Estado: **OWNER_ATTESTED_EVIDENCE_PENDING**.
+
+Em 12/09/2026 o responsável declarou que o ensaio de backup e restore já havia sido
+realizado fora deste repositório. Nenhuma evidência foi fornecida: não há registro de
+data, destino isolado, contagens conferidas nem RPO/RTO medidos, e nada foi executado
+a partir deste repositório. O estado permanece **não verificado** até que esses dados
+sejam preenchidos aqui; a declaração do responsável não substitui a evidência.
+
+Isto importa agora porque `docs/production-rename-runbook.md` move dados entre volumes,
+buckets e nós RabbitMQ. Sem restore comprovado, a Fase 5 do runbook opera sem rede.
+
 Os dados do Hablas.Chat atual não fazem parte dos comandos deste projeto.
 
 | Componente | Procedimento a implementar após versões/destinos | Evidência de restauração exigida |
@@ -30,3 +39,19 @@ Não programar expiração/TTL/exclusão nem contratar PITR sem autorização.
 Scripts `backup.sh`/`restore.sh` não implementados: faltam destino, versões e janela
 que definem comandos consistentes. Não há arquivo vazio nem comando falso de sucesso.
 Sem esse ensaio, o servidor inteiro não está comprovadamente reconstruível.
+
+## Evidência a registrar
+
+Preencher antes da janela de rename. Enquanto houver campo vazio, o estado continua
+`OWNER_ATTESTED_EVIDENCE_PENDING`.
+
+| Campo | Valor |
+|---|---|
+| Data e hora do ensaio | |
+| Executor | |
+| Destino isolado utilizado | |
+| Componentes restaurados | |
+| Contagens/checksums conferidos | |
+| RPO medido | |
+| RTO medido | |
+| Pendências encontradas | |

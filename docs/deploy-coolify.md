@@ -9,10 +9,21 @@ de deployment-report.md e supabase-validation.md.
 Versão observada: 4.3.18. Destino e baseline em environment.target.yml e docs.
 Referência conferida: https://coolify.io/docs/knowledge-base/docker/compose
 
-Projeto `jjxcrsedavkskvcbnuvmkaql` e ambiente staging
-`xukzvsnkjemq085zitdzzytf` já existem. O recurso de dados está implantado; a aplicação
-continua ausente. Retomar pelos UUIDs e manifesto existentes, nunca recriar por nome.
-Nenhum domínio público foi associado aos recursos desta implantação.
+Projeto `jjxcrsedavkskvcbnuvmkaql` e ambiente `xukzvsnkjemq085zitdzzytf` já existem.
+Retomar pelos UUIDs e manifesto existentes, nunca recriar por nome.
+
+> Atualização de 12/09/2026 — rename físico autorizado. Os nomes de stack e de
+> serviço em `compose.app.yml` e `compose.data.yml` passaram de `*-staging-*` para
+> `*-production-*`. Isso **não** é cosmético no Coolify: o hostname interno de cada
+> serviço deriva do nome do serviço com o UUID do recurso anexado, então todos os
+> `*_UPSTREAM` e `*_INTERNAL_ORIGIN` mudam junto e o gateway precisa ser atualizado
+> na mesma operação. Os volumes renomeados nascem **vazios**; ver
+> `docs/production-rename-runbook.md` antes de aplicar.
+>
+> O domínio da API deixa de ser configurado no proxy do Coolify: `api-crm.hablas.chat`
+> passa a ser publicado por Cloudflare Tunnel (`infra/coolify/compose.tunnel.yml`),
+> que alcança o gateway pela rede Docker. Não associar domínio público ao gateway no
+> painel do Coolify para esse host.
 
 ## Verificações locais disponíveis
 

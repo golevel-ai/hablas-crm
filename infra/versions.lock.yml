@@ -25,8 +25,10 @@
       "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-auth@sha256:456590deee1dc5a72500ebec4c3a79cc45bac6ee5e73e4b28bd06172d0e6ebca",
-      "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+      "reference": null,
+      "verification": "PENDING_PRODUCTION_REBUILD",
+      "reference_previous": "ghcr.io/golevel-ai/hablas-evo-staging-auth@sha256:456590deee1dc5a72500ebec4c3a79cc45bac6ee5e73e4b28bd06172d0e6ebca",
+      "target_package": "ghcr.io/golevel-ai/hablas-evo-production-auth"
     },
     "crm": {
       "service": "crm",
@@ -36,8 +38,10 @@
       "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "docker/Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-crm@sha256:9be2b0a2a09f605cd994b20941d996f828741fa155097787fc0647689ee9f1fe",
-      "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+      "reference": null,
+      "verification": "PENDING_PRODUCTION_REBUILD",
+      "reference_previous": "ghcr.io/golevel-ai/hablas-evo-staging-crm@sha256:9be2b0a2a09f605cd994b20941d996f828741fa155097787fc0647689ee9f1fe",
+      "target_package": "ghcr.io/golevel-ai/hablas-evo-production-crm"
     },
     "core": {
       "service": "core",
@@ -47,8 +51,10 @@
       "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-core@sha256:1e2d5cba7d46042af8be38cf1504f0efe2ce841fac5ba343c215952ae2e1cfc1",
-      "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+      "reference": null,
+      "verification": "PENDING_PRODUCTION_REBUILD",
+      "reference_previous": "ghcr.io/golevel-ai/hablas-evo-staging-core@sha256:1e2d5cba7d46042af8be38cf1504f0efe2ce841fac5ba343c215952ae2e1cfc1",
+      "target_package": "ghcr.io/golevel-ai/hablas-evo-production-core"
     },
     "processor": {
       "service": "processor",
@@ -58,8 +64,10 @@
       "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-processor@sha256:278b1c550b9b1662e45b776e7565b5854d75a73415f6a55ed4eb9b7a35ea7cd1",
-      "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+      "reference": null,
+      "verification": "PENDING_PRODUCTION_REBUILD",
+      "reference_previous": "ghcr.io/golevel-ai/hablas-evo-staging-processor@sha256:278b1c550b9b1662e45b776e7565b5854d75a73415f6a55ed4eb9b7a35ea7cd1",
+      "target_package": "ghcr.io/golevel-ai/hablas-evo-production-processor"
     },
     "gateway": {
       "service": "gateway",
@@ -69,8 +77,10 @@
       "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-gateway@sha256:37fe8c08b24cafa1e1354e538d06a16aece8fc086b1630214cac0458e5dac97b",
-      "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+      "reference": null,
+      "verification": "PENDING_PRODUCTION_REBUILD",
+      "reference_previous": "ghcr.io/golevel-ai/hablas-evo-staging-gateway@sha256:37fe8c08b24cafa1e1354e538d06a16aece8fc086b1630214cac0458e5dac97b",
+      "target_package": "ghcr.io/golevel-ai/hablas-evo-production-gateway"
     },
     "evoflow": {
       "service": "evoflow",
@@ -80,8 +90,10 @@
       "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-evoflow@sha256:f4deaedbb21114135d4559d09f8b578e3ec55cfc820b005caf47b0a06f2f1b81",
-      "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+      "reference": null,
+      "verification": "PENDING_PRODUCTION_REBUILD",
+      "reference_previous": "ghcr.io/golevel-ai/hablas-evo-staging-evoflow@sha256:f4deaedbb21114135d4559d09f8b578e3ec55cfc820b005caf47b0a06f2f1b81",
+      "target_package": "ghcr.io/golevel-ai/hablas-evo-production-evoflow"
     },
     "bot": {
       "service": "bot",
@@ -91,8 +103,17 @@
       "recipe_sha256": "fe23fd36e526b84667d89c2fb4e9c62b7047f8c2254a79d9cc699d52db4f85d3",
       "dockerfile": "Dockerfile",
       "platform": "linux/amd64",
-      "reference": "ghcr.io/golevel-ai/hablas-evo-staging-bot@sha256:abc525728a2a054d10a3e12959f18c93cc403a0ba9a69d7bf6836fc6f9012767",
-      "verification": "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+      "reference": null,
+      "verification": "PENDING_PRODUCTION_REBUILD",
+      "reference_previous": "ghcr.io/golevel-ai/hablas-evo-staging-bot@sha256:abc525728a2a054d10a3e12959f18c93cc403a0ba9a69d7bf6836fc6f9012767",
+      "target_package": "ghcr.io/golevel-ai/hablas-evo-production-bot"
+    },
+    "evolution_go": {
+      "source_tag": "evoapicloud/evolution-go:latest",
+      "platform": "linux/amd64",
+      "reference": "evoapicloud/evolution-go@sha256:31b959306bce83f3b502c81f99c73b51d32de9e94b74ba985101c9730f218c14",
+      "manifest_digest": "sha256:6fa601464bd76d3d19ece4c48d8bb5373d025d95d45b939ae4bf0c77b03f5aaa",
+      "status": "DOCKER_HUB_LATEST_AMD64_DIGEST_VERIFIED"
     },
     "redis": {
       "source_tag": "library/redis:7.4-alpine",

@@ -1,6 +1,6 @@
 {
   "project": "hablas-evo-infra",
-  "environment": "staging",
+  "environment": "production",
   "coolify": {
     "url": "https://my.golevel.ai/",
     "server_name": "VPS-US-VA-002-OP",
@@ -20,29 +20,65 @@
     "zone_name": "hablas.chat",
     "zone_id": "b0a4153d93f81cd7957e34cdfcd11e60",
     "identity_status": "VERIFIED",
-    "frontend_candidate": "evo-stg.hablas.chat",
-    "api_candidate": "evo-api-stg.hablas.chat",
+    "frontend_candidate": "crm.hablas.chat",
+    "api_candidate": "api-crm.hablas.chat",
     "frontend_customer_host_requested": "crm.hablas.chat",
     "frontend_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
     "api_customer_host_requested": "api-crm.hablas.chat",
     "api_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
-    "availability_observed_at": "2026-09-10T17:37:35Z",
+    "availability_observed_at": "2026-09-12T00:00:00Z",
     "availability_method": "AUTHENTICATED_CLOUDFLARE_API_AND_PUBLIC_DNS",
     "frontend_host": null,
     "api_host": null,
-    "host_allocation_status": "AUTHORIZED_PENDING_WRITE"
+    "host_allocation_status": "AUTHORIZED_PENDING_WRITE",
+    "retired_hosts": ["evo-stg.hablas.chat", "evo-api-stg.hablas.chat"],
+    "retired_host_policy": "DELETE_AFTER_OBSERVATION_WINDOW",
+    "tunnel": {
+      "mode": "CLOUDFLARE_TUNNEL_REPLACES_ORIGIN_A_RECORD",
+      "name": "hablas-evo-production",
+      "id": null,
+      "ingress_target": "http://hablas-evo-production-gateway:80",
+      "origin_ports_closed": false,
+      "replicas": 2,
+      "status": "AUTHORIZED_PENDING_WRITE"
+    }
   },
   "cutover": {
     "data_migration": "OWNER_CONFIRMED_FRESH_START",
     "execution_authorization": "FULL_STAGING_AND_FINAL_DEPLOYMENT_AUTHORIZED",
     "remote_changes_authorized": true,
-    "gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED"
+    "gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED",
+    "rename_scope": "FULL_PHYSICAL_RENAME_STAGING_TO_PRODUCTION",
+    "rename_status": "LOCAL_PREPARED_REMOTE_PENDING",
+    "backup_restore_rehearsal": "OWNER_ATTESTED_EVIDENCE_PENDING",
+    "backup_restore_attested_at": "2026-09-12",
+    "backup_restore_attested_by": "owner",
+    "runbook": "docs/production-rename-runbook.md"
+  },
+  "storage": {
+    "provider": "cloudflare_r2",
+    "media_bucket": "hablas-evo-production-media",
+    "backup_bucket": "hablas-evo-production-backups",
+    "media_bucket_previous": "hablas-evo-staging-media",
+    "backup_bucket_previous": "hablas-evo-staging-backups",
+    "rename_method": "CREATE_NEW_BUCKET_AND_COPY_OBJECTS",
+    "rename_note": "R2 buckets cannot be renamed in place; ActiveStorage blob keys are preserved by copying object keys verbatim.",
+    "status": "AUTHORIZED_PENDING_WRITE"
+  },
+  "registry": {
+    "namespace": "ghcr.io/golevel-ai",
+    "image_prefix": "hablas-evo-production",
+    "image_prefix_previous": "hablas-evo-staging",
+    "rename_method": "REBUILD_AND_PUBLISH_UNDER_NEW_PACKAGE_NAMES",
+    "status": "AUTHORIZED_PENDING_WRITE"
   },
   "supabase": {
     "status": "VALIDATED",
     "project_ref_owner_provided": "znxlfqctnezrropcbftw",
     "project_identity_status": "VERIFIED_PROJECT_URL_AND_DASHBOARD",
-    "project_name": "hablas-evo-staging",
+    "project_name": "hablas-evo-production",
+    "project_name_previous": "hablas-evo-staging",
+    "project_rename_status": "AUTHORIZED_PENDING_WRITE",
     "organization_name": "Hablas",
     "organization_id": "hnaujighizgevlmtkycw",
     "region": "us-east-1",
@@ -56,8 +92,9 @@
     "public_tables_observed": 110,
     "isolation_decision": "OWNER_APPROVED_DEDICATED_STAGING_PROJECT",
     "main_schema": "public",
-    "evoflow_schema": "hablas_evoflow_staging",
-    "evoflow_schema_status": "MIGRATED_RUNTIME_VERIFIED",
+    "evoflow_schema": "hablas_evoflow_production",
+    "evoflow_schema_previous": "hablas_evoflow_staging",
+    "evoflow_schema_status": "RENAME_AUTHORIZED_PENDING_WRITE",
     "evoflow_schema_oid": 17493,
     "main_connection": {
       "mode": "session",
@@ -65,9 +102,12 @@
       "port": 5432,
       "database": "postgres",
       "admin_username": "postgres.znxlfqctnezrropcbftw",
-      "runtime_username": "hablas_evo_stg_main.znxlfqctnezrropcbftw",
-      "migration_username": "hablas_evo_stg_main_migrator.znxlfqctnezrropcbftw",
-      "status": "MAIN_BOOTSTRAPPED_RUNTIME_VERIFIED"
+      "runtime_username": "hablas_evo_prod_main.znxlfqctnezrropcbftw",
+      "migration_username": "hablas_evo_prod_main_migrator.znxlfqctnezrropcbftw",
+      "runtime_username_previous": "hablas_evo_stg_main.znxlfqctnezrropcbftw",
+      "migration_username_previous": "hablas_evo_stg_main_migrator.znxlfqctnezrropcbftw",
+      "role_rename_requires_password_rotation": true,
+      "status": "ROLE_RENAME_AUTHORIZED_PENDING_WRITE"
     },
     "direct_connection": {
       "host": "db.znxlfqctnezrropcbftw.supabase.co",
@@ -78,6 +118,30 @@
     "mcp_mode": "read_only",
     "mcp_status": "AUTHENTICATED_METADATA_READ_VERIFIED",
     "connection_secret_refs": ["local-file:.ops-private/secrets/znxlfqctnezrropcbftw-admin.password"]
+  },
+  "evolution_go": {
+    "status": "RUNNING_LICENSE_ACTIVE_CRM_CONFIGURED",
+    "public_origin": "https://evo-go.hablas.chat",
+    "coolify_resource_uuid": "aoe9kzqf3xvewjimf7czhicv",
+    "coolify_status": "RUNNING",
+    "supabase_project_ref": "awfyxxccdcaoljujqfsr",
+    "supabase_project_name": "hablas-evolution-go",
+    "supabase_region": "us-east-1",
+    "supabase_plan": "Free",
+    "database_names": ["evogo_auth", "evogo_users"],
+    "database_tls_status": "ENCRYPTED_VERIFY_FULL_PENDING_DEPLOYMENT",
+    "cloudflare_dns_status": "PROXIED",
+    "manager_worker": "hablas-evolution-go-manager",
+    "manager_worker_version": "c0918c85-be0d-49ec-bc67-1876b96aed3a",
+    "manager_qr_status": "RENDERING_VERIFIED_PAIRING_NOT_VERIFIED",
+    "database_pool_status": "AUTH_TRANSACTION_POOLER_DEPLOYED_CRM_QR_RENDER_VERIFIED",
+    "auth_database_pool_mode": "transaction",
+    "auth_database_pool_port": 6543,
+    "users_database_pool_mode": "session",
+    "users_database_pool_port": 5432,
+    "crm_resource_uuid": "j5tqzqszm8di0pxs8vswon24",
+    "crm_integration_status": "RUNTIME_ENV_VERIFIED",
+    "verified_at": "2026-09-11T02:49:43Z"
   },
   "verification": {
     "observed_at": "2026-09-10T09:58:00Z",

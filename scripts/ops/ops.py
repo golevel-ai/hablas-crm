@@ -20,7 +20,7 @@ from urllib import error, parse, request
 ROOT = Path(__file__).resolve().parents[2]
 EXPECTED = {
     "project": "hablas-evo-infra",
-    "environment": "staging",
+    "environment": "production",
     "coolify.url": "https://my.golevel.ai/",
     "coolify.server_name": "VPS-US-VA-002-OP",
     "coolify.expected_server_ip": "51.81.80.55",
@@ -37,7 +37,7 @@ EXPECTED = {
     "cloudflare.host_allocation_status": "AUTHORIZED_PENDING_WRITE",
     "supabase.organization_id": "hnaujighizgevlmtkycw",
     "supabase.project_ref_owner_provided": "znxlfqctnezrropcbftw",
-    "supabase.project_name": "hablas-evo-staging",
+    "supabase.project_name": "hablas-evo-production",
     "cutover.data_migration": "OWNER_CONFIRMED_FRESH_START",
     "cutover.execution_authorization": "FULL_STAGING_AND_FINAL_DEPLOYMENT_AUTHORIZED",
     "cutover.gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED",
@@ -99,14 +99,46 @@ def validate_target(target):
         raise Blocked("Cloudflare availability timestamp is naive or in the future")
     cf = target["cloudflare"]
     hosts = [cf.get("frontend_candidate"), cf.get("api_candidate")]
-    for host in hosts:
+    approved = [cf.get("frontend_customer_host_requested"), cf.get("api_customer_host_requested")]
+    for host, want in zip(hosts, approved):
+        if not isinstance(host, str) or host != want:
+            raise Blocked("Only the approved customer hostnames are allowed")
+        if not re.fullmatch(r"(?:api-)?crm\.hablas\.chat", host):
+            raise Blocked("Customer hostname is outside the approved production pattern")
+    if hosts[0] == hosts[1]:
+        raise Blocked("Frontend and API candidates must differ")
+    retired = cf.get("retired_hosts")
+    if not isinstance(retired, list) or not retired:
+        raise Blocked("Retired staging hostnames must stay recorded until removal")
+    for host in retired:
         if not isinstance(host, str) or not re.fullmatch(
             r"evo-(?:api-)?stg(?:-[0-9]{2})?\.hablas\.chat", host
         ):
-            raise Blocked("Only new staging candidate hostnames are allowed")
-    if hosts[0] == hosts[1]:
-        raise Blocked("Frontend and API candidates must differ")
+            raise Blocked("Retired hostnames must be the previous staging candidates")
+        if host in hosts:
+            raise Blocked("A retired hostname cannot also be an active candidate")
+    validate_tunnel(cf.get("tunnel"))
     return target
+
+
+def validate_tunnel(tunnel):
+    if not isinstance(tunnel, dict):
+        raise Blocked("Cloudflare tunnel block is required")
+    if tunnel.get("mode") != "CLOUDFLARE_TUNNEL_REPLACES_ORIGIN_A_RECORD":
+        raise Blocked("Unsupported tunnel mode")
+    name = tunnel.get("name")
+    if not isinstance(name, str) or not re.fullmatch(r"hablas-evo-production", name):
+        raise Blocked("Tunnel name is outside the approved production pattern")
+    target_url = tunnel.get("ingress_target")
+    if not isinstance(target_url, str) or not re.fullmatch(
+        r"http://hablas-evo-production-gateway:80", target_url
+    ):
+        raise Blocked("Tunnel ingress must target the production gateway over the Docker network")
+    replicas = tunnel.get("replicas")
+    if not isinstance(replicas, int) or replicas < 2:
+        raise Blocked("Tunnel requires at least two replicas to avoid a single point of failure")
+    if tunnel.get("origin_ports_closed") is True and tunnel.get("id") is None:
+        raise Blocked("Origin ports cannot be recorded as closed before the tunnel exists")
 
 
 def git(*args, cwd=ROOT):
@@ -154,6 +186,28 @@ def validate_release():
     return lock
 
 
+def unverified_production_images():
+    # The staging-to-production rename changed the GHCR package names. A digest that
+    # was verified under hablas-evo-staging-* does not exist under the new package, so
+    # every application image must be rebuilt and re-verified before any remote deploy.
+    lock = load(ROOT / "infra/versions.lock.yml")
+    stale = []
+    prefix = "ghcr.io/golevel-ai/hablas-evo-"
+    for service, image in sorted(lock.get("images", {}).items()):
+        reference = image.get("reference") or ""
+        # Upstream infrastructure images are pinned in infra/build/oci.lock.json and are
+        # unaffected by the rename. Ours are identified by the registry namespace on
+        # either the current reference or the recorded rename target.
+        owned = reference.startswith(prefix) or str(image.get("target_package", "")).startswith(prefix)
+        if not owned:
+            continue
+        if not reference.startswith(prefix + "production-" + service + "@"):
+            stale.append(service + " image still points at a pre-rename package")
+        elif image.get("verification") != "ANONYMOUS_PULL_AND_DIGEST_VERIFIED":
+            stale.append(service + " image digest not verified after the rename")
+    return stale
+
+
 def preflight(target, stage):
     validate_release()
     if stage == "local":
@@ -170,6 +224,9 @@ def preflight(target, stage):
         reasons.append("Cloudflare host inventory is older than one hour")
     if not all(target["cloudflare"].get(k) for k in ("frontend_host", "api_host")):
         reasons.append("Validated hostnames absent")
+    if target["cloudflare"]["tunnel"].get("id") is None:
+        reasons.append("Cloudflare tunnel not created; API would still publish the origin IP")
+    reasons.extend(unverified_production_images())
     # These are known unresolved requirements, not switchable approval booleans.
     reasons.extend([
         "Release images for the current recipe and backend container tests outstanding",

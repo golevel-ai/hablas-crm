@@ -31,7 +31,7 @@ def get(url, headers=None):
 
 
 def verify_public(reference):
-    if not re.fullmatch(r"ghcr\.io/golevel-ai/hablas-evo-staging-[a-z]+@sha256:[a-f0-9]{64}", reference):
+    if not re.fullmatch(r"ghcr\.io/golevel-ai/hablas-evo-production-[a-z]+@sha256:[a-f0-9]{64}", reference):
         raise Blocked("Unexpected registry namespace or mutable reference")
     repository, digest = reference.removeprefix("ghcr.io/").split("@")
     token = json.loads(get("https://ghcr.io/token?" + parse.urlencode(
@@ -86,7 +86,7 @@ def main():
             if image["source_commit"] != expected_source or image["infrastructure_commit"] != args.commit \
                     or image["recipe_sha256"] != expected_recipe or image["platform"] != "linux/amd64":
                 raise Blocked("CI image provenance does not match local release inputs")
-            if not image["reference"].startswith("ghcr.io/golevel-ai/hablas-evo-staging-" + service + "@"):
+            if not image["reference"].startswith("ghcr.io/golevel-ai/hablas-evo-production-" + service + "@"):
                 raise Blocked("Receipt points to another package")
             images[service] = image
         if set(images) != set(RECIPES):
