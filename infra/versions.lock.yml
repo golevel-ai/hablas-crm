@@ -2,11 +2,11 @@
   "schema_version": 1,
   "repository": "https://github.com/golevel-ai/hablas-crm.git",
   "ref_selected": "main",
-  "commit": "fa6924df23b863de30b065d25e301bb414593bd5",
+  "commit": "3b8e8cb2c6676422d19c508b527ec69bc3acbfff",
   "submodules": {
     "evo-ai-core-service-community": "c6f7ba319c7e44c942ac9d6a7792e19109ebd2e1",
     "evo-ai-crm-community": "4083dddb9bd7afd1152d6f41992225f1bfa410f5",
-    "evo-ai-frontend-community": "20ba0e60e7b6d826ec3b937a0e22e901b2adca75",
+    "evo-ai-frontend-community": "05d1e2670acce6b1d2511081d04dc327b2b6fb0e",
     "evo-ai-processor-community": "a8e1bd444ced0f6dc3ccb31f20416f63e7048182",
     "evo-auth-service-community": "851073dd1e6ff0dc26e2e5bc8f54efa427ca65a4",
     "evo-bot-runtime": "7ec7db4761ca5bc8d09e4aa036398de2821c2e71",
