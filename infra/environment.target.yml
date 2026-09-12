@@ -63,7 +63,26 @@
     "backup_bucket_previous": "hablas-evo-staging-backups",
     "rename_method": "CREATE_NEW_BUCKET_AND_COPY_OBJECTS",
     "rename_note": "R2 buckets cannot be renamed in place; ActiveStorage blob keys are preserved by copying object keys verbatim.",
-    "status": "AUTHORIZED_PENDING_WRITE"
+    "status": "PRODUCTION_BUCKETS_CREATED_OBJECTS_COPIED_VERIFIED",
+    "copy_verification": {
+      "completed_at": "2026-09-12T20:55:12Z",
+      "media": {
+        "objects": 23,
+        "bytes": 3322873,
+        "metadata_match": true,
+        "checksum_sample_match": true,
+        "anonymous_s3_read_denied_status": 400
+      },
+      "backups": {
+        "objects": 1,
+        "bytes": 164,
+        "metadata_match": true,
+        "checksum_sample_match": true,
+        "anonymous_s3_read_denied_status": 400
+      },
+      "staging_buckets_retained": true,
+      "migration_token_status": "REVOKED_AFTER_COPY"
+    }
   },
   "registry": {
     "namespace": "ghcr.io/golevel-ai",

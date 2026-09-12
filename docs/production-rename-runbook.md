@@ -1,6 +1,6 @@
 # Runbook: rename físico staging → production e cutover para crm.hablas.chat
 
-Estado: **PREPARADO LOCALMENTE / EXECUÇÃO REMOTA PENDENTE**
+Estado: **FASES 1-2 CONCLUIDAS / FASES 3-8 PENDENTES**
 Owner: hablas-evo-infra
 Escopo autorizado: `cutover.rename_scope = FULL_PHYSICAL_RENAME_STAGING_TO_PRODUCTION`
 
