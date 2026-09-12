@@ -161,7 +161,7 @@ def validate_release():
         # It must not silently replace the fork, gateway or submodule revisions.
         git("merge-base", "--is-ancestor", lock["commit"], "HEAD")
         changed = git("diff", "--name-only", lock["commit"], "HEAD").splitlines()
-        allowed = ("infra/", "scripts/ops/", "docs/", ".github/workflows/")
+        allowed = ("infra/", "scripts/ops/", "docs/", "supabase/migrations/", ".github/workflows/")
         # A gitlink pointer bump surfaces as the bare submodule path in this diff. It is
         # not a free-form source-tree edit: the checks below independently confirm the
         # working tree, the checked-out commit and infra/versions.lock.yml all agree, and
