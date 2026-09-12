@@ -57,6 +57,17 @@ def save(path, value):
     temporary.replace(path)
 
 
+def preserve_independent_images(lock_images, images):
+    for service, image in lock_images.items():
+        if service not in RECIPES:
+            images[service] = image
+
+
+def image_status(has_app):
+    return ("PUBLISHED_APPLICATION_IMAGES_VERIFIED_PENDING_ROLLOUT" if has_app
+            else "PUBLISHED_APPLICATION_IMAGES_VERIFIED_NOT_DEPLOYED")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--target", required=True, type=Path)
@@ -103,13 +114,14 @@ def main():
             verify_public(image["reference"])
             image["verification"] = "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
             print("PASS: " + service + " public linux/amd64 manifest matches CI digest", flush=True)
+        preserve_independent_images(lock["images"], images)
         for service in ("redis", "rabbitmq", "clickhouse"):
             images[service] = load(ROOT / "infra/build/oci.lock.json")["images"][service]
         if args.write:
-            has_app = False
+            manifest_path = ROOT / "infra/deployment-manifest.yml"
+            manifest = load(manifest_path)
+            has_app = bool(manifest.get("coolify", {}).get("app_uuid"))
             if lock.get("release", {}).get("infrastructure_commit") not in (None, args.commit):
-                existing_manifest = load(ROOT / "infra/deployment-manifest.yml")
-                has_app = bool(existing_manifest["coolify"].get("app_uuid"))
                 if not args.replace_candidate:
                     raise Blocked("Another release is recorded; replacing it needs an explicit flag")
                 if has_app and not args.update_deployed_application:
@@ -121,13 +133,10 @@ def main():
                     json.dump({"release": lock["release"], "images": lock["images"]}, out, indent=2)
                     out.write("\n")
             lock["images"] = images
-            lock["image_status"] = ("PUBLISHED_APPLICATION_IMAGES_VERIFIED_PENDING_ROLLOUT" if has_app
-                                     else "PUBLISHED_APPLICATION_IMAGES_VERIFIED_NOT_DEPLOYED")
+            lock["image_status"] = image_status(has_app)
             lock["release"] = {"infrastructure_commit": args.commit, "recipe_sha256": expected_recipe,
                                "ci_run_id": args.run_id, "ci_url": run["url"]}
             save(ROOT / "infra/versions.lock.yml", lock)
-            manifest_path = ROOT / "infra/deployment-manifest.yml"
-            manifest = load(manifest_path)
             manifest["release"] = lock["release"]
             manifest["images"] = {name: image["reference"] for name, image in images.items()}
             save(manifest_path, manifest)

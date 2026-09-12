@@ -12,6 +12,7 @@ import unittest
 from unittest.mock import patch
 
 import ops
+import import_release
 import verify_gate_a
 
 
@@ -121,33 +122,49 @@ class PolicyTests(unittest.TestCase):
             ops.validate_target(target)
 
     def test_pre_rename_images_block_remote_deployment(self):
-        reasons = ops.unverified_production_images()
-        self.assertTrue(reasons, "rename must invalidate the staging image digests")
         for service in ("auth", "crm", "core", "processor", "gateway", "bot", "evoflow"):
+            lock = ops.load(ops.ROOT / "infra/versions.lock.yml")
+            image = lock["images"][service]
+            image["reference"] = f"ghcr.io/golevel-ai/hablas-evo-staging-{service}@sha256:{'0' * 64}"
+            image["verification"] = "PENDING_PRODUCTION_REBUILD"
+            with patch.object(ops, "load", return_value=lock):
+                reasons = ops.unverified_production_images()
             with self.subTest(service=service):
                 self.assertTrue(any(r.startswith(service + " ") for r in reasons))
 
     def test_verified_production_images_clear_the_block(self):
         lock = ops.load(ops.ROOT / "infra/versions.lock.yml")
         digest = "@sha256:" + "0" * 64
-        for service, image in lock["images"].items():
-            if str(image.get("target_package", "")).startswith("ghcr.io/golevel-ai/hablas-evo-"):
-                image["reference"] = f"ghcr.io/golevel-ai/hablas-evo-production-{service}{digest}"
-                image["verification"] = "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
+        for service in ("auth", "crm", "core", "processor", "gateway", "bot", "evoflow"):
+            image = lock["images"][service]
+            image["reference"] = f"ghcr.io/golevel-ai/hablas-evo-production-{service}{digest}"
+            image["verification"] = "ANONYMOUS_PULL_AND_DIGEST_VERIFIED"
         with patch.object(ops, "load", return_value=lock):
             self.assertEqual(ops.unverified_production_images(), [])
 
     def test_unverified_digest_under_the_right_package_still_blocks(self):
         lock = ops.load(ops.ROOT / "infra/versions.lock.yml")
         digest = "@sha256:" + "0" * 64
-        for service, image in lock["images"].items():
-            if str(image.get("target_package", "")).startswith("ghcr.io/golevel-ai/hablas-evo-"):
-                image["reference"] = f"ghcr.io/golevel-ai/hablas-evo-production-{service}{digest}"
-                image["verification"] = "PENDING_PRODUCTION_REBUILD"
+        for service in ("auth", "crm", "core", "processor", "gateway", "bot", "evoflow"):
+            image = lock["images"][service]
+            image["reference"] = f"ghcr.io/golevel-ai/hablas-evo-production-{service}{digest}"
+            image["verification"] = "PENDING_PRODUCTION_REBUILD"
         with patch.object(ops, "load", return_value=lock):
             reasons = ops.unverified_production_images()
         self.assertTrue(all("not verified after the rename" in r for r in reasons))
         self.assertEqual(len(reasons), 7)
+
+    def test_release_import_preserves_independent_image_pins(self):
+        lock = ops.load(ops.ROOT / "infra/versions.lock.yml")
+        images = {service: {} for service in import_release.RECIPES}
+        import_release.preserve_independent_images(lock["images"], images)
+        self.assertEqual(images["evolution_go"], lock["images"]["evolution_go"])
+
+    def test_release_import_keeps_existing_application_pending_rollout(self):
+        self.assertEqual(
+            import_release.image_status(True),
+            "PUBLISHED_APPLICATION_IMAGES_VERIFIED_PENDING_ROLLOUT",
+        )
 
     def test_supabase_pending_stops_remote_before_any_api_call(self):
         self.target["supabase"]["status"] = "PENDING_OWNER_INPUT"
