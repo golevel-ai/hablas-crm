@@ -1,8 +1,8 @@
-name: Build isolated staging images
+name: Build isolated production images
 
 on:
   push:
-    branches: [infra/staging-deployment]
+    branches: [infra/production-deployment]
     paths:
       - infra/build/**
       - infra/tests/**
@@ -23,19 +23,19 @@ on:
       - evo-ai-frontend-community
       - nginx/**
       - .gitmodules
-      - .github/workflows/build-staging.yml
+      - .github/workflows/build-production.yml
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: hablas-evo-staging-release-build
+  group: hablas-evo-production-release-build
   cancel-in-progress: false
 
 jobs:
   verify:
-    if: github.repository == 'golevel-ai/hablas-crm' && github.ref == 'refs/heads/infra/staging-deployment'
+    if: github.repository == 'golevel-ai/hablas-crm' && github.ref == 'refs/heads/infra/production-deployment'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     outputs:
@@ -101,14 +101,14 @@ jobs:
             --compose infra/coolify/compose.app.yml
       - name: Build and scan frontend with Node 20
         env:
-          VITE_APP_ENV: staging
-          VITE_API_URL: https://evo-api-stg.hablas.chat
-          VITE_AUTH_API_URL: https://evo-api-stg.hablas.chat
-          VITE_EVOAI_API_URL: https://evo-api-stg.hablas.chat
-          VITE_AGENT_PROCESSOR_URL: https://evo-api-stg.hablas.chat
-          VITE_WS_URL: https://evo-api-stg.hablas.chat
-          VITE_EVOFLOW_API_URL: https://evo-api-stg.hablas.chat
-          VITE_CAMPAIGN_API_URL: https://evo-api-stg.hablas.chat
+          VITE_APP_ENV: production
+          VITE_API_URL: https://api-crm.hablas.chat
+          VITE_AUTH_API_URL: https://api-crm.hablas.chat
+          VITE_EVOAI_API_URL: https://api-crm.hablas.chat
+          VITE_AGENT_PROCESSOR_URL: https://api-crm.hablas.chat
+          VITE_WS_URL: https://api-crm.hablas.chat
+          VITE_EVOFLOW_API_URL: https://api-crm.hablas.chat
+          VITE_CAMPAIGN_API_URL: https://api-crm.hablas.chat
         run: |
           npm ci --ignore-scripts --no-audit --no-fund --prefix evo-ai-frontend-community
           npm run build --prefix evo-ai-frontend-community
@@ -200,7 +200,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Refuse to overwrite an existing release tag
         env:
-          IMAGE: ghcr.io/golevel-ai/hablas-evo-staging-${{ matrix.service }}:${{ github.sha }}
+          IMAGE: ghcr.io/golevel-ai/hablas-evo-production-${{ matrix.service }}:${{ github.sha }}
         run: |
           if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
             echo 'Release tag already exists. Use a new reviewed infrastructure commit.' >&2
@@ -214,7 +214,7 @@ jobs:
           file: ${{ steps.context.outputs.dockerfile }}
           platforms: linux/amd64
           push: true
-          tags: ghcr.io/golevel-ai/hablas-evo-staging-${{ matrix.service }}:${{ github.sha }}
+          tags: ghcr.io/golevel-ai/hablas-evo-production-${{ matrix.service }}:${{ github.sha }}
           provenance: mode=max
           build-args: |
             RAILS_ENV=production
@@ -223,6 +223,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/golevel-ai/hablas-crm
             org.opencontainers.image.revision=${{ github.sha }}
             io.golevel.project=hablas-evo-infra
+            io.golevel.environment=production
             io.golevel.recipe=${{ steps.context.outputs.recipe }}
       - name: Record the returned image digest
         env:
@@ -237,7 +238,7 @@ jobs:
           service = os.environ['SERVICE']
           source = json.loads(Path(f".ops-private/build/{os.environ['RECIPE']}/{service}/hablas-build.json").read_text())
           source.pop('files_sha256')
-          source['reference'] = f"ghcr.io/golevel-ai/hablas-evo-staging-{service}@{os.environ['DIGEST']}"
+          source['reference'] = f"ghcr.io/golevel-ai/hablas-evo-production-{service}@{os.environ['DIGEST']}"
           Path(f'image-{service}.json').write_text(json.dumps(source, indent=2) + '\n')
           PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -267,7 +268,7 @@ jobs:
           lock = json.loads(Path('infra/versions.lock.yml').read_text())
           with open(os.environ['GITHUB_ENV'], 'a') as out:
               for service in ('auth', 'crm', 'core', 'processor'):
-                  reference = (f"ghcr.io/golevel-ai/hablas-evo-staging-{service}:{os.environ['GITHUB_SHA']}"
+                  reference = (f"ghcr.io/golevel-ai/hablas-evo-production-{service}:{os.environ['GITHUB_SHA']}"
                                if os.environ['BUILT'] == 'true' else lock['images'][service]['reference'])
                   out.write(f'{service.upper()}_IMAGE={reference}\n')
           PY
