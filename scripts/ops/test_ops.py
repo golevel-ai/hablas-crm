@@ -37,6 +37,21 @@ class PolicyTests(unittest.TestCase):
                 with self.assertRaises(ops.Blocked):
                     ops.validate_target(target)
 
+    def test_renamed_supabase_roles_and_schema_are_required(self):
+        for path in (
+            ("supabase", "evoflow_schema"),
+            ("supabase", "main_connection", "runtime_username"),
+            ("supabase", "main_connection", "migration_username"),
+        ):
+            with self.subTest(path=".".join(path)):
+                target = copy.deepcopy(self.target)
+                destination = target
+                for key in path[:-1]:
+                    destination = destination[key]
+                destination[path[-1]] = "wrong-role-or-schema"
+                with self.assertRaises(ops.Blocked):
+                    ops.validate_target(target)
+
     def test_cannot_relax_safety_with_truthy_strings(self):
         for value in (True, "false", 0, None):
             target = copy.deepcopy(self.target)

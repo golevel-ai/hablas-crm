@@ -1,6 +1,6 @@
 # Backup e recuperação — procedimento a concretizar
 
-Estado: **OWNER_ATTESTED_EVIDENCE_PENDING**.
+Estado: **OWNER_WAIVED_FOR_EXPLICIT_DATA_DISPOSAL**.
 
 Em 12/09/2026 o responsável declarou que o ensaio de backup e restore já havia sido
 realizado fora deste repositório. Nenhuma evidência foi fornecida: não há registro de
@@ -8,8 +8,11 @@ data, destino isolado, contagens conferidas nem RPO/RTO medidos, e nada foi exec
 a partir deste repositório. O estado permanece **não verificado** até que esses dados
 sejam preenchidos aqui; a declaração do responsável não substitui a evidência.
 
-Isto importa agora porque `docs/production-rename-runbook.md` move dados entre volumes,
-buckets e nós RabbitMQ. Sem restore comprovado, a Fase 5 do runbook opera sem rede.
+Isto importava antes da autorização explícita de descarte. Em 12/09/2026, o responsável
+autorizou descartar os dados existentes observados (mensagens, anexos, contatos, objetos
+R2 e dados de filas) durante o rename físico. Portanto, este cutover opera como fresh
+start e não depende de restore para rollback de dados. Esta dispensa não comprova backup
+nem se aplica a outro ambiente ou execução.
 
 Os dados do Hablas.Chat atual não fazem parte dos comandos deste projeto.
 

@@ -50,7 +50,7 @@ try {
     CREATE EXTENSION "uuid-ossp" SCHEMA extensions;
     CREATE ROLE flow_migrator LOGIN PASSWORD 'local-flow-test';
     CREATE ROLE flow_runtime LOGIN PASSWORD 'local-flow-runtime-test';
-    CREATE SCHEMA hablas_evoflow_staging AUTHORIZATION flow_migrator;
+    CREATE SCHEMA hablas_evoflow_production AUTHORIZATION flow_migrator;
     GRANT USAGE ON SCHEMA extensions TO flow_migrator, flow_runtime;
     CREATE TABLE public.contacts (id integer PRIMARY KEY, marker text);
     INSERT INTO public.contacts VALUES (1, 'preserved');
@@ -60,7 +60,7 @@ try {
   const input = {
     POSTGRES_DB_HOST: '127.0.0.1', POSTGRES_DB_PORT: String(port), POSTGRES_DB_DATABASE: 'postgres',
     POSTGRES_DB_USERNAME: 'flow_migrator', POSTGRES_DB_PASSWORD: 'local-flow-test',
-    POSTGRES_SSLMODE: 'verify-full', POSTGRES_DB_SCHEMA: 'hablas_evoflow_staging', POSTGRES_POOL_MAX: '2',
+    POSTGRES_SSLMODE: 'verify-full', POSTGRES_DB_SCHEMA: 'hablas_evoflow_production', POSTGRES_POOL_MAX: '2',
   };
   const options = {
     ...postgresOptions(input),
@@ -72,7 +72,7 @@ try {
   };
   migrations = new DataSource(options);
   await migrations.initialize();
-  assert.equal((await migrations.query('SELECT current_schema() AS schema'))[0].schema, 'hablas_evoflow_staging');
+  assert.equal((await migrations.query('SELECT current_schema() AS schema'))[0].schema, 'hablas_evoflow_production');
   const applied = await migrations.runMigrations({ transaction: 'each' });
   assert.equal(applied.length, 17);
   assert.equal((await migrations.runMigrations({ transaction: 'each' })).length, 0);
@@ -81,9 +81,9 @@ try {
     [{ values: '{sentinel}' }]);
   assert.equal((await migrations.query("SELECT count(*)::int AS n FROM information_schema.columns WHERE table_schema=current_schema() AND table_name='journey_sessions' AND column_name='waiting_for'"))[0].n, 1);
   await admin.query(`
-    GRANT USAGE ON SCHEMA hablas_evoflow_staging TO flow_runtime;
-    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA hablas_evoflow_staging TO flow_runtime;
-    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA hablas_evoflow_staging TO flow_runtime;
+    GRANT USAGE ON SCHEMA hablas_evoflow_production TO flow_runtime;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA hablas_evoflow_production TO flow_runtime;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA hablas_evoflow_production TO flow_runtime;
   `);
   runtime = new DataSource({ ...options, username: 'flow_runtime', password: 'local-flow-runtime-test', migrations: [] });
   await runtime.initialize();

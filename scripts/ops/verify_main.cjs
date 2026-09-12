@@ -18,16 +18,16 @@ async function main() {
   const target = JSON.parse(fs.readFileSync(arg('--target'), 'utf8'));
   const ref = target.supabase.project_ref_owner_provided;
   const connection = target.supabase.main_connection;
-  if (ref !== 'znxlfqctnezrropcbftw' || target.environment !== 'staging'
+  if (ref !== 'znxlfqctnezrropcbftw' || target.environment !== 'production'
       || connection.host !== 'aws-0-us-east-1.pooler.supabase.com'
-      || connection.runtime_username !== 'hablas_evo_stg_main.' + ref) throw new Error('TARGET');
+      || connection.runtime_username !== 'hablas_evo_prod_main.' + ref) throw new Error('TARGET');
   if (argv.includes('--dry-run')) {
     console.log('NOT_EXECUTED: main runtime login, TLS, schema isolation and catalog privileges only');
     return;
   }
   const modulePath = fs.realpathSync(arg('--pg-module'));
   if (!modulePath.startsWith(path.join(root, '.ops-private/build/')) || !modulePath.endsWith('/node_modules/pg')) throw new Error('DRIVER');
-  const secret = path.join(root, '.ops-private/secrets', ref + '-main-runtime.password');
+  const secret = path.join(root, '.ops-private/secrets', ref + '-prod-main.password');
   const stat = fs.lstatSync(secret);
   if (!stat.isFile() || stat.isSymbolicLink() || (stat.mode & 0o077)) throw new Error('SECRET_PERMISSIONS');
   const { Client } = require(modulePath);
@@ -35,7 +35,7 @@ async function main() {
     user: connection.runtime_username, password: fs.readFileSync(secret, 'utf8'),
     ssl: { ca: fs.readFileSync(path.join(root, 'infra/certs/supabase-root-2021.crt'), 'utf8'), rejectUnauthorized: true },
     connectionTimeoutMillis: 10000, query_timeout: 30000, statement_timeout: 30000,
-    application_name: 'hablas-evo-staging-main-runtime-verification' });
+    application_name: 'hablas-evo-production-main-runtime-verification' });
   try {
     await client.connect();
     if (!client.connection.stream.authorized) throw new Error('TLS');
@@ -43,7 +43,7 @@ async function main() {
     const row = (await client.query(`SELECT current_user AS role, current_schema() AS schema,
       (SELECT count(*)::int FROM pg_tables WHERE schemaname='public') AS public_tables,
       has_schema_privilege(current_user, 'public', 'CREATE') AS can_ddl,
-      has_schema_privilege(current_user, 'hablas_evoflow_staging', 'USAGE') AS can_use_evoflow,
+      has_schema_privilege(current_user, 'hablas_evoflow_production', 'USAGE') AS can_use_evoflow,
       has_table_privilege(current_user, (SELECT c.oid FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
         WHERE n.nspname='auth' AND c.relname='users'), 'SELECT') AS can_read_supabase_auth,
       has_table_privilege(current_user, 'public.contacts', 'SELECT') AS can_select,
@@ -59,7 +59,7 @@ async function main() {
       (SELECT count(*)::int FROM user_states WHERE app_name='hablas-infra-bootstrap') AS bootstrap_user_states,
       (SELECT count(*)::int FROM app_states WHERE app_name='hablas-infra-bootstrap') AS bootstrap_app_states`, [owner + '/%'])).rows[0];
     await client.query('ROLLBACK');
-    if (row.role !== 'hablas_evo_stg_main' || row.schema !== 'public' || row.public_tables !== 110
+    if (row.role !== 'hablas_evo_prod_main' || row.schema !== 'public' || row.public_tables !== 110
         || row.can_ddl || row.can_use_evoflow || row.can_read_supabase_auth || row.can_change_migrations
         || !row.can_select || !row.can_insert || !row.can_update || !row.can_delete
         || row.source_markers !== 1 || row.alembic_versions !== 1

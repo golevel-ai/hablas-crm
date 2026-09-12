@@ -26,12 +26,12 @@ OWNER = 'hablas-evo-infra-staging-5fd09cad-c52d-40a9-b4af-f7a57f65bed9'
 DIRECTORY = Path('/data/coolify/services') / RESOURCE
 STAGE = 'START'
 SCRIPT_SHA256 = {
-    'database_lock.cjs': 'aa95a955acf28978cb1387dbf2c830875af16981a479426d0660de39215e0650',
+    'database_lock.cjs': '2d390a8ee0173efda750a6fbf696db04e9bfea3faed19fe734586120e8aa1051',
     'bootstrap_crm.rb': '1705476477b19d45244cdf1fee3965bb7b0d998a69f22a7ccebf08b95e66a7ed',
     'bootstrap_processor_alembic.py': 'a2441bc7465822686af0958e6bc9a4d9c51e3c07bc13ca0fe8f9433fdfb5e786',
     'bootstrap_processor.py': '690d3f5d687b13e31774ea579a49f49ef808232db95ddd05bfb35a0a59de22b6',
-    'grant_main_runtime.cjs': '917278884cd15754e05bb49f1313b052584e97c32ebe7508ece75e3c75e4bdd8',
-    'verify_main_completion.cjs': '2079647627d940e0f163deaab4c4d838f1c918f5a97983b89440b28454bf0c22',
+    'grant_main_runtime.cjs': '690c52272b832b69e5cfece7efad6d4e696c892b5ac496b211d493753d59ed6a',
+    'verify_main_completion.cjs': '13d6451b3815a901929410f785994a5c69c17ff2d9d1525cea16f4b4cd0b93a5',
 }
 
 
@@ -63,7 +63,7 @@ def main():
     STAGE = 'OPERATOR_IDENTITY'
     if ops.get('OWNER') != OWNER or ops.get('PROJECT_REF') != 'znxlfqctnezrropcbftw':
         raise RuntimeError('Operator credential ownership mismatch')
-    if ops.get('DB_USER') != 'hablas_evo_stg_main_migrator.znxlfqctnezrropcbftw':
+    if ops.get('DB_USER') != 'hablas_evo_prod_main_migrator.znxlfqctnezrropcbftw':
         raise RuntimeError('Use the dedicated migration role')
     dsn = urlsplit(ops.get('DB_DSN', ''))
     query = dict(parse_qsl(dsn.query, keep_blank_values=True))
@@ -144,7 +144,7 @@ def main():
                 value = value.replace(secret, '[REDACTED]')
         return value
     def command(name, image, argv, memory='2g'):
-        if not re.fullmatch(r'ghcr.io/golevel-ai/hablas-evo-staging-[a-z]+@sha256:[a-f0-9]{64}', image):
+        if not re.fullmatch(r'ghcr.io/golevel-ai/hablas-evo-production-[a-z]+@sha256:[a-f0-9]{64}', image):
             raise RuntimeError('Image must be a verified immutable project image')
         result = ['docker', 'run', '--rm', '--name', name, '--network', 'coolify', '--memory', memory,
                   '--cpus', '1', '--log-driver', 'none', '--label', 'io.golevel.owner=' + OWNER,

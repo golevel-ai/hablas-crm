@@ -19,7 +19,7 @@ async function main() {
   if (!targetPath || !modulePath || !['session', 'direct'].includes(mode)) throw new Error('INPUT');
   const target = JSON.parse(fs.readFileSync(targetPath, 'utf8'));
   const supabase = target.supabase;
-  if (target.project !== 'hablas-evo-infra' || target.environment !== 'staging'
+  if (target.project !== 'hablas-evo-infra' || target.environment !== 'production'
       || supabase.project_ref_owner_provided !== 'znxlfqctnezrropcbftw'
       || supabase.project_identity_status !== 'VERIFIED_PROJECT_URL_AND_DASHBOARD') throw new Error('TARGET');
   const connection = supabase[mode === 'session' ? 'main_connection' : 'direct_connection'];

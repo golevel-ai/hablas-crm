@@ -49,10 +49,12 @@
     "remote_changes_authorized": true,
     "gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED",
     "rename_scope": "FULL_PHYSICAL_RENAME_STAGING_TO_PRODUCTION",
-    "rename_status": "LOCAL_PREPARED_REMOTE_PENDING",
-    "backup_restore_rehearsal": "OWNER_ATTESTED_EVIDENCE_PENDING",
+    "rename_status": "PHASE_3_SUPABASE_COMPLETE",
+    "backup_restore_rehearsal": "OWNER_WAIVED_FOR_EXPLICIT_DATA_DISPOSAL",
     "backup_restore_attested_at": "2026-09-12",
     "backup_restore_attested_by": "owner",
+    "data_disposition": "OWNER_AUTHORIZED_DISCARD_EXISTING_DATA",
+    "data_disposition_authorized_at": "2026-09-12",
     "runbook": "docs/production-rename-runbook.md"
   },
   "storage": {
@@ -92,7 +94,7 @@
     "status": "AUTHORIZED_PENDING_WRITE"
   },
   "supabase": {
-    "status": "VALIDATED",
+    "status": "PRODUCTION_ROLES_AND_EVOFLOW_SCHEMA_TLS_VERIFIED",
     "project_ref_owner_provided": "znxlfqctnezrropcbftw",
     "project_identity_status": "VERIFIED_PROJECT_URL_AND_DASHBOARD",
     "project_name": "hablas-evo-production",
@@ -113,7 +115,7 @@
     "main_schema": "public",
     "evoflow_schema": "hablas_evoflow_production",
     "evoflow_schema_previous": "hablas_evoflow_staging",
-    "evoflow_schema_status": "RENAME_AUTHORIZED_PENDING_WRITE",
+    "evoflow_schema_status": "RENAMED_TLS_VERIFIED",
     "evoflow_schema_oid": 17493,
     "main_connection": {
       "mode": "session",
@@ -126,7 +128,7 @@
       "runtime_username_previous": "hablas_evo_stg_main.znxlfqctnezrropcbftw",
       "migration_username_previous": "hablas_evo_stg_main_migrator.znxlfqctnezrropcbftw",
       "role_rename_requires_password_rotation": true,
-      "status": "ROLE_RENAME_AUTHORIZED_PENDING_WRITE"
+      "status": "PRODUCTION_ROLES_CREATED_TLS_VERIFIED"
     },
     "direct_connection": {
       "host": "db.znxlfqctnezrropcbftw.supabase.co",

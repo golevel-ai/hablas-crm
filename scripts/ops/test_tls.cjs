@@ -12,7 +12,7 @@ const input = {
   POSTGRES_DB_HOST: 'localhost', POSTGRES_DB_USERNAME: 'synthetic',
   POSTGRES_DB_PASSWORD: 'synthetic-test-only', POSTGRES_DB_DATABASE: 'synthetic',
   POSTGRES_SSLMODE: 'verify-full',
-  POSTGRES_DB_SCHEMA: 'hablas_evoflow_staging',
+  POSTGRES_DB_SCHEMA: 'hablas_evoflow_production',
 };
 let directory, certificate, server, port;
 
@@ -69,6 +69,6 @@ test('pool, port and migration configuration fail closed', () => {
   assert.equal(options.synchronize, false);
   assert.equal(options.migrationsRun, false);
   assert.equal(options.installExtensions, false);
-  assert.equal(options.schema, 'hablas_evoflow_staging');
+  assert.equal(options.schema, 'hablas_evoflow_production');
   assert.throws(() => postgresOptions({ ...input, POSTGRES_DB_SCHEMA: 'public' }), /POSTGRES_DB_SCHEMA/);
 });

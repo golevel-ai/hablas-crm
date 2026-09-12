@@ -7,7 +7,7 @@ const { execFileSync } = require('node:child_process');
 const ROOT = path.resolve(__dirname, '../..');
 const REF = 'znxlfqctnezrropcbftw';
 const OWNER = 'hablas-evo-infra-staging-5fd09cad-c52d-40a9-b4af-f7a57f65bed9';
-const ROLE = 'hablas_evo_stg_main_migrator';
+const ROLE = 'hablas_evo_prod_main_migrator';
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const literal = value => "'" + value.replaceAll("'", "''") + "'";
 function secret(file) {

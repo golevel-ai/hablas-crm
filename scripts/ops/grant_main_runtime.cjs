@@ -10,8 +10,8 @@ async function main() {
   try {
     await client.connect();
     const identity = (await client.query('SELECT current_user AS role, current_schema() AS schema')).rows[0];
-    if (identity.role !== 'hablas_evo_stg_main_migrator' || identity.schema !== 'public') throw new Error('ROLE');
-    const role = 'hablas_evo_stg_main';
+    if (identity.role !== 'hablas_evo_prod_main_migrator' || identity.schema !== 'public') throw new Error('ROLE');
+    const role = 'hablas_evo_prod_main';
     await client.query('BEGIN');
     await client.query(`GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO ${role}`);
     await client.query(`GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO ${role}`);

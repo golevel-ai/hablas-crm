@@ -30,3 +30,4 @@ infra/cloudflare/node_modules/
 infra/cloudflare/.wrangler/
 infra/cloudflare/.dev.vars*
 infra/tests/node_modules/
+supabase/roles.sql

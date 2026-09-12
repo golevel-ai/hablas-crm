@@ -19,8 +19,8 @@ function postgresOptions(env = process.env) {
   if (env.POSTGRES_SSLMODE !== 'verify-full') {
     throw new Error('POSTGRES_SSLMODE must be verify-full for this deployment');
   }
-  if (env.POSTGRES_DB_SCHEMA !== 'hablas_evoflow_staging') {
-    throw new Error('POSTGRES_DB_SCHEMA must be hablas_evoflow_staging');
+  if (env.POSTGRES_DB_SCHEMA !== 'hablas_evoflow_production') {
+    throw new Error('POSTGRES_DB_SCHEMA must be hablas_evoflow_production');
   }
   const ssl = { rejectUnauthorized: true };
   if (env.PGSSLROOTCERT) ssl.ca = fs.readFileSync(env.PGSSLROOTCERT, 'utf8');
@@ -41,7 +41,7 @@ function postgresOptions(env = process.env) {
       max: positiveInteger(env, 'POSTGRES_POOL_MAX', 5, 20),
       connectionTimeoutMillis: 10000,
       idleTimeoutMillis: 30000,
-      options: '-c search_path=hablas_evoflow_staging,extensions',
+      options: '-c search_path=hablas_evoflow_production,extensions',
     },
   };
 }

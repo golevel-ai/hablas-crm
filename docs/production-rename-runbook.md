@@ -1,6 +1,6 @@
 # Runbook: rename físico staging → production e cutover para crm.hablas.chat
 
-Estado: **FASES 1-2 CONCLUIDAS / FASES 3-8 PENDENTES**
+Estado: **FASES 1-3 CONCLUIDAS / FASES 4-8 PENDENTES**
 Owner: hablas-evo-infra
 Escopo autorizado: `cutover.rename_scope = FULL_PHYSICAL_RENAME_STAGING_TO_PRODUCTION`
 
@@ -24,11 +24,9 @@ reconstruíveis: basta republicar sob o nome novo.
 ## Pré-requisitos
 
 1. Janela de manutenção aprovada, com responsável de negócio e canal de escalonamento.
-2. Backup íntegro e **restaurável** de Supabase, R2, RabbitMQ e ClickHouse.
-   `cutover.backup_restore_rehearsal` está como `OWNER_ATTESTED_EVIDENCE_PENDING`:
-   o responsável declarou que o ensaio ocorreu fora deste repositório, mas a
-   evidência (data, destino, RPO/RTO medidos) ainda não foi registrada. Registrar
-   antes da janela; ver `docs/backup-restore.md`.
+2. O responsável autorizou explicitamente o descarte dos dados existentes para este
+   fresh start (`OWNER_AUTHORIZED_DISCARD_EXISTING_DATA`). A dispensa de restore vale
+   apenas para esta execução; ver `docs/backup-restore.md`.
 3. Imagens de produção construídas e verificadas. `scripts/ops/ops.py` bloqueia o
    deploy remoto enquanto `infra/versions.lock.yml` apontar para pacotes pré-rename.
 4. Inventário Cloudflare reexecutado imediatamente antes de qualquer escrita.
@@ -77,6 +75,10 @@ que renomear e rotacionar no escuro.
    reaplicar os grants; o EvoFlow lê o schema por `POSTGRES_DB_SCHEMA`.
 4. Validar login das duas roles novas por conexão TLS `verify-full` antes de seguir.
 5. Só revogar as roles antigas na Fase 8, após a janela de observação.
+
+Concluída em 12/09/2026: as quatro roles de produção foram criadas com os limites
+previstos, o schema foi renomeado e os logins/grants foram confirmados por TLS
+`verify-full`. O runtime EvoFlow não pode ler nem alterar sua tabela `migrations`.
 
 ### Fase 4 — Parar escritas e drenar as filas
 

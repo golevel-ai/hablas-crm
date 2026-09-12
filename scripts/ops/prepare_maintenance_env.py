@@ -62,7 +62,7 @@ def main():
         if data['owner'] != owner or data['resource_uuid'] != manifest['coolify']['data_uuid']:
             raise Blocked('Data resource ownership mismatch')
         ref = target['supabase']['project_ref_owner_provided']
-        password_file = directory / (ref + '-main-migrator.password')
+        password_file = directory / (ref + '-prod-main-migrator.password')
         if password_file.stat().st_mode & 0o077:
             raise Blocked('Migration credential permissions must be 0600')
         password = password_file.read_text()
