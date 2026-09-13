@@ -144,7 +144,7 @@
     "connection_secret_refs": ["local-file:.ops-private/secrets/znxlfqctnezrropcbftw-admin.password"]
   },
   "evolution_go": {
-    "status": "RUNNING_LICENSE_ACTIVE_PRODUCTION_AND_STAGING_CONFIGURED_SHARED_SECRET_ROTATION_REQUIRED",
+    "status": "RUNNING_LICENSE_ACTIVE_STAGING_CRM_CONFIGURED_SHARED_SECRET_ROTATED_VERIFIED",
     "public_origin": "https://evo-go.hablas.chat",
     "coolify_resource_uuid": "aoe9kzqf3xvewjimf7czhicv",
     "coolify_status": "RUNNING",
@@ -164,13 +164,13 @@
     "users_database_pool_mode": "session",
     "users_database_pool_port": 5432,
     "crm_resource_uuid": "j5tqzqszm8di0pxs8vswon24",
-    "crm_integration_status": "RUNTIME_ENV_VERIFIED",
+    "crm_integration_status": "RUNTIME_ENV_ROTATED_RESTARTED_HEALTHY",
     "production_crm_resource_uuid": "kp3njjr4qdr2wetlr518ud2y",
-    "production_integration_status": "RUNTIME_ENV_CONFIGURED_POST_ROTATION_SMOKE_PENDING",
-    "verified_at": "2026-09-13T02:46:00Z"
+    "production_integration_status": "NOT_CONFIGURED_ENV_VARIABLE_ABSENT",
+    "verified_at": "2026-09-13T04:43:26Z"
   },
   "verification": {
-    "observed_at": "2026-09-13T02:46:00Z",
+    "observed_at": "2026-09-13T04:43:26Z",
     "method": "authenticated_browser_public_smoke_and_verified_tls_postgresql_login",
     "baseline": "docs/existing-environment-baseline.md",
     "revalidate_before_every_remote_write": true
