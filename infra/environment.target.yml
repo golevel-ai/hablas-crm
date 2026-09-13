@@ -52,7 +52,7 @@
     "remote_changes_authorized": true,
     "gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED",
     "rename_scope": "FULL_PHYSICAL_RENAME_STAGING_TO_PRODUCTION",
-    "rename_status": "PRODUCTION_CUTOVER_COMPLETE_AUTH_LOGOUT_FIX_PENDING",
+    "rename_status": "PRODUCTION_CUTOVER_COMPLETE_AUTH_LOGOUT_VERIFIED",
     "backup_restore_rehearsal": "OWNER_WAIVED_FOR_EXPLICIT_DATA_DISPOSAL",
     "backup_restore_attested_at": "2026-09-12",
     "backup_restore_attested_by": "owner",
