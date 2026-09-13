@@ -52,22 +52,26 @@ class PolicyTests(unittest.TestCase):
                 with self.assertRaises(ops.Blocked):
                     ops.validate_target(target)
 
-    def test_release_allows_only_versioned_supabase_migrations(self):
-        lock = {"commit": "locked", "submodules": {}}
+    def test_release_allows_reviewed_metadata_files(self):
+        for allowed_path in (
+            ".gitmodules",
+            "supabase/migrations/20260912210000_rename_evoflow_for_production.sql",
+        ):
+            lock = {"commit": "locked", "submodules": {}}
 
-        def fake_git(*args, **_kwargs):
-            if args == ("rev-parse", "HEAD"):
-                return "head"
-            if args == ("merge-base", "--is-ancestor", "locked", "HEAD"):
-                return ""
-            if args == ("diff", "--name-only", "locked", "HEAD"):
-                return "supabase/migrations/20260912210000_rename_evoflow_for_production.sql"
-            if args == ("submodule", "status", "--recursive"):
-                return ""
-            raise AssertionError(args)
+            def fake_git(*args, **_kwargs):
+                if args == ("rev-parse", "HEAD"):
+                    return "head"
+                if args == ("merge-base", "--is-ancestor", "locked", "HEAD"):
+                    return ""
+                if args == ("diff", "--name-only", "locked", "HEAD"):
+                    return allowed_path
+                if args == ("submodule", "status", "--recursive"):
+                    return ""
+                raise AssertionError(args)
 
-        with patch.object(ops, "load", return_value=lock), patch.object(ops, "git", side_effect=fake_git):
-            self.assertEqual(ops.validate_release(), lock)
+            with patch.object(ops, "load", return_value=lock), patch.object(ops, "git", side_effect=fake_git):
+                self.assertEqual(ops.validate_release(), lock)
 
     def test_cannot_relax_safety_with_truthy_strings(self):
         for value in (True, "false", 0, None):

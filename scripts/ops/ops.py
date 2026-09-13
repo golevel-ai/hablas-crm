@@ -166,7 +166,7 @@ def validate_release():
         # not a free-form source-tree edit: the checks below independently confirm the
         # working tree, the checked-out commit and infra/versions.lock.yml all agree, and
         # the submodule's own file changes are never visible in this superproject diff.
-        allowed_exact = {".gitignore", "opencode.json", *lock["submodules"]}
+        allowed_exact = {".gitignore", ".gitmodules", "opencode.json", *lock["submodules"]}
         if any(p not in allowed_exact and not p.startswith(allowed) for p in changed):
             raise Blocked("Application tree changed relative to the locked fork")
     observed = {}
