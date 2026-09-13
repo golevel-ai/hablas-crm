@@ -39,6 +39,9 @@ def main():
         if name.startswith(('.ops-private/', '.playwright-mcp/')) or name == 'infra/deployment-manifest.yml':
             failures.append(name)
             continue
+        index_entry = subprocess.check_output(['git', 'ls-files', '--stage', '--', name], cwd=ROOT).split()
+        if index_entry and index_entry[0] == b'160000':
+            continue
         data = subprocess.check_output(['git', 'show', ':' + name], cwd=ROOT)
         if any(secret and secret in data for secret in secrets) or any(re.search(pattern, data) for pattern in patterns):
             failures.append(name)

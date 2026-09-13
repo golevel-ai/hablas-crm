@@ -27,6 +27,7 @@ set local role hablas_evo_stg_flow_migrator;
 grant select, insert, update, delete on all tables in schema hablas_evoflow_production to hablas_evo_prod_flow, hablas_evo_prod_flow_migrator;
 grant usage, select on all sequences in schema hablas_evoflow_production to hablas_evo_prod_flow, hablas_evo_prod_flow_migrator;
 revoke all on table hablas_evoflow_production.migrations from hablas_evo_prod_flow;
+grant select on table hablas_evoflow_production.migrations to hablas_evo_prod_flow;
 grant select, insert, update, delete on table hablas_evoflow_production.migrations to hablas_evo_prod_flow_migrator;
 reset role;
 

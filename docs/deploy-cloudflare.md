@@ -84,11 +84,12 @@ inventário/manifesto.
 
 ## Cloudflare Tunnel para a API
 
-A API final não usa registro A para o IP da origem. `infra/cloudflare/tunnel-config.yml`
-define as regras de ingress em versionamento, em vez do painel, para que cada mudança
-seja revisável; `infra/coolify/compose.tunnel.yml` sobe dois conectores `cloudflared`.
+A API final não usa registro A para o IP da origem. O túnel é remotamente gerenciado;
+`infra/cloudflare/tunnel-config.yml` espelha as regras salvas no painel para revisão e
+`infra/coolify/compose.tunnel.yml` sobe dois conectores `cloudflared` com token.
 
-- Regra única: `api-crm.hablas.chat` → `http://hablas-evo-production-gateway:80`.
+- Regra única: `api-crm.hablas.chat` →
+  `http://hablas-evo-production-gateway-kp3njjr4qdr2wetlr518ud2y:3030`.
   Qualquer outra requisição que chegue ao conector recebe 404, em vez de alcançar
   um origin não previsto.
 - `keepAliveTimeout` sobe para 5m: `/cable` e o SSE do processor mantêm conexões

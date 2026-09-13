@@ -1,21 +1,8 @@
-# Locally-managed Cloudflare Tunnel for the production API host.
+# Audited representation of the remotely managed production Tunnel ingress.
 #
-# The ingress rules live here, in version control, instead of in the dashboard so
-# that every change is reviewable. Reference:
-# https://developers.cloudflare.com/tunnel/features/locally-managed-tunnels/configuration-file/
+# Cloudflare stores and distributes these settings because the connectors authenticate
+# with TUNNEL_TOKEN. Keep this file aligned with the dashboard for review. Reference:
 # https://developers.cloudflare.com/tunnel/reference/origin-parameters/
-#
-# TUNNEL_ID is substituted at deploy time; the credentials file is mounted read-only
-# and never committed. See docs/production-rename-runbook.md.
-
-tunnel: ${TUNNEL_ID}
-credentials-file: /etc/cloudflared/credentials.json
-
-# Do not let the container silently replace the reviewed binary.
-no-autoupdate: true
-
-# /ready on this port backs the container healthcheck.
-metrics: 0.0.0.0:2000
 
 # Cloudflare terminates TLS at the edge. The hop from cloudflared to the gateway
 # stays inside the Docker network, so it is plain HTTP by design.
@@ -34,7 +21,7 @@ originRequest:
 
 ingress:
   - hostname: api-crm.hablas.chat
-    service: http://hablas-evo-production-gateway:80
+    service: http://hablas-evo-production-gateway-kp3njjr4qdr2wetlr518ud2y:3030
 
   # Anything that reaches the connector without matching the rule above is not part
   # of this deployment. Fail closed rather than exposing an unintended origin.

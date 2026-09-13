@@ -30,11 +30,11 @@ EXPECTED = {
     "cloudflare.zone_name": "hablas.chat",
     "cloudflare.zone_id": "b0a4153d93f81cd7957e34cdfcd11e60",
     "cloudflare.frontend_customer_host_requested": "crm.hablas.chat",
-    "cloudflare.frontend_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "cloudflare.frontend_customer_host_status": "ACTIVE_WORKER_CUSTOM_DOMAIN",
     "cloudflare.api_customer_host_requested": "api-crm.hablas.chat",
-    "cloudflare.api_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "cloudflare.api_customer_host_status": "ACTIVE_TUNNEL_CNAME",
     "cloudflare.availability_method": "AUTHENTICATED_CLOUDFLARE_API_AND_PUBLIC_DNS",
-    "cloudflare.host_allocation_status": "AUTHORIZED_PENDING_WRITE",
+    "cloudflare.host_allocation_status": "PRODUCTION_ACTIVE_VERIFIED",
     "supabase.organization_id": "hnaujighizgevlmtkycw",
     "supabase.project_ref_owner_provided": "znxlfqctnezrropcbftw",
     "supabase.project_name": "hablas-evo-production",
@@ -134,7 +134,7 @@ def validate_tunnel(tunnel):
         raise Blocked("Tunnel name is outside the approved production pattern")
     target_url = tunnel.get("ingress_target")
     if not isinstance(target_url, str) or not re.fullmatch(
-        r"http://hablas-evo-production-gateway:80", target_url
+        r"http://hablas-evo-production-gateway-kp3njjr4qdr2wetlr518ud2y:3030", target_url
     ):
         raise Blocked("Tunnel ingress must target the production gateway over the Docker network")
     replicas = tunnel.get("replicas")

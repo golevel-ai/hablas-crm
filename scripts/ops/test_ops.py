@@ -149,6 +149,7 @@ class PolicyTests(unittest.TestCase):
 
     def test_origin_ports_cannot_be_closed_before_the_tunnel_exists(self):
         target = copy.deepcopy(self.target)
+        target["cloudflare"]["tunnel"]["id"] = None
         target["cloudflare"]["tunnel"]["origin_ports_closed"] = True
         with self.assertRaises(ops.Blocked):
             ops.validate_target(target)

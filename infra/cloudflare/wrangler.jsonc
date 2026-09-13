@@ -7,11 +7,15 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "preview_urls": false,
-  "routes": [],
+  "routes": [
+    {"pattern": "crm.hablas.chat", "custom_domain": true}
+  ],
   "env": {
     "production": {
       "name": "hablas-evo-frontend-production",
-      "routes": []
+      "routes": [
+        {"pattern": "crm.hablas.chat", "custom_domain": true}
+      ]
     }
   },
   "observability": {

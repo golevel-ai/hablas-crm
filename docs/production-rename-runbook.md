@@ -78,7 +78,8 @@ que renomear e rotacionar no escuro.
 
 Concluída em 12/09/2026: as quatro roles de produção foram criadas com os limites
 previstos, o schema foi renomeado e os logins/grants foram confirmados por TLS
-`verify-full`. O runtime EvoFlow não pode ler nem alterar sua tabela `migrations`.
+`verify-full`. O runtime EvoFlow pode apenas ler sua tabela `migrations`, requisito
+do guard `showMigrations()`; alterações permanecem exclusivas da role migrator.
 
 ### Fase 4 — Parar escritas e drenar as filas
 
@@ -129,8 +130,8 @@ Ponto de não-retorno para o tráfego de cliente.
 1. Criar o tunnel `hablas-evo-production` e gravar o UUID em
    `cloudflare.tunnel.id` (`infra/environment.target.yml`). O preflight remoto
    bloqueia enquanto ele for `null`.
-2. Gravar as credenciais em `.ops-private/secrets/tunnel-credentials.json`
-   (git-ignored) e aplicar `infra/coolify/compose.tunnel.yml`. São dois conectores:
+2. Gravar `TUNNEL_TOKEN` como segredo do recurso Coolify e aplicar
+   `infra/coolify/compose.tunnel.yml`. São dois conectores:
    um único `cloudflared` seria ponto único de falha para toda a API.
 3. Confirmar os dois conectores registrados e saudáveis no painel.
 4. Criar a rota DNS de `api-crm.hablas.chat` apontando para o tunnel, **não** um

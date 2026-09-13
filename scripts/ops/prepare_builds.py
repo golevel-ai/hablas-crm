@@ -92,7 +92,7 @@ def transform(service, destination):
                 "  sslrootcert: <%= ENV.fetch('PGSSLROOTCERT', '/etc/ssl/certs/ca-certificates.crt') %>\n")
         session = destination / "config/initializers/session_store.rb"
         if service == "auth":
-            replace(session, "_evo_auth_service_session", "_hablas_evo_stg_auth_session")
+            replace(session, "_evo_auth_service_session", "_hablas_evo_prod_auth_session")
             production = destination / "config/environments/production.rb"
             replace(production,
                     "GlobalConfigService.load('ACTIVE_STORAGE_SERVICE', ENV.fetch('ACTIVE_STORAGE_SERVICE', 'local'))",
@@ -125,7 +125,7 @@ def transform(service, destination):
             helper = destination / "app/controllers/concerns/auth_helper.rb"
             text = helper.read_text()
             start, end = text.index("  def cookie_domain\n"), text.index("  def render_unauthorized(")
-            text = text[:start] + "  def cookie_domain\n    nil # Host-only for this isolated staging deployment.\n  end\n\n" + text[end:]
+            text = text[:start] + "  def cookie_domain\n    nil # Host-only for this isolated production deployment.\n  end\n\n" + text[end:]
             # Remove existing debug statements that reveal token prefixes.
             text = "\n".join(line for line in text.splitlines()
                              if "header value (first" not in line and "token value (first" not in line
@@ -134,13 +134,13 @@ def transform(service, destination):
             for relative in ("app/controllers/concerns/auth_helper.rb", "app/controllers/api/v1/auth_controller.rb",
                              "config/initializers/doorkeeper_token_lookup.rb"):
                 path = destination / relative
-                path.write_text(path.read_text().replace("_evo_rt", "_hablas_evo_stg_rt")
-                                .replace("_evo_at", "_hablas_evo_stg_at"))
+                path.write_text(path.read_text().replace("_evo_rt", "_hablas_evo_prod_rt")
+                                .replace("_evo_at", "_hablas_evo_prod_at"))
             lookup = destination / "config/initializers/doorkeeper_token_lookup.rb"
             replace(lookup, "            return cookies['refresh_token'] if cookies['refresh_token'].present?\n", "")
         else:
             replace(session, "key: '_evolution_session', same_site: :lax",
-                    "key: '_hablas_evo_stg_crm_session', secure: true, httponly: true, same_site: :lax")
+                    "key: '_hablas_evo_prod_crm_session', secure: true, httponly: true, same_site: :lax")
             qrcodes = destination / "app/controllers/api/v1/evolution_go/qrcodes_controller.rb"
             for prefix in ("parsed_response['data']", "parsed_response"):
                 for field, legacy in (("qrcode", "Qrcode"), ("code", "Code")):

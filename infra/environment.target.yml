@@ -8,9 +8,12 @@
     "server_uuid": "hwt9rmdg9rrodfb9hilh8vcn",
     "project_uuid": "jjxcrsedavkskvcbnuvmkaql",
     "environment_uuid": "xukzvsnkjemq085zitdzzytf",
-    "data_uuid": "nrvbltvkzmzvivrbkldjok6y",
-    "data_status": "RUNNING_HEALTHY_LIMITS_VERIFIED",
-    "metadata_status": "STAGING_EMPTY_CREATED",
+    "app_uuid": "kp3njjr4qdr2wetlr518ud2y",
+    "app_status": "RUNNING_HEALTHY_9_POST_ROTATION_VERIFIED",
+    "data_uuid": "w71rbddgurimilccdjpfomm9",
+    "data_status": "RUNNING_HEALTHY_3_CREDENTIALS_VERIFIED",
+    "tunnel_uuid": "h3nf3ly3vroqg7gq86wvacf0",
+    "metadata_status": "PRODUCTION_DEPLOYED",
     "identity_status": "VERIFIED",
     "version_observed": "4.3.18"
   },
@@ -23,24 +26,24 @@
     "frontend_candidate": "crm.hablas.chat",
     "api_candidate": "api-crm.hablas.chat",
     "frontend_customer_host_requested": "crm.hablas.chat",
-    "frontend_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "frontend_customer_host_status": "ACTIVE_WORKER_CUSTOM_DOMAIN",
     "api_customer_host_requested": "api-crm.hablas.chat",
-    "api_customer_host_status": "OWNER_RELEASED_DNS_ABSENT_DEPLOYMENT_AUTHORIZED",
+    "api_customer_host_status": "ACTIVE_TUNNEL_CNAME",
     "availability_observed_at": "2026-09-12T00:00:00Z",
     "availability_method": "AUTHENTICATED_CLOUDFLARE_API_AND_PUBLIC_DNS",
-    "frontend_host": null,
-    "api_host": null,
-    "host_allocation_status": "AUTHORIZED_PENDING_WRITE",
+    "frontend_host": "crm.hablas.chat",
+    "api_host": "api-crm.hablas.chat",
+    "host_allocation_status": "PRODUCTION_ACTIVE_VERIFIED",
     "retired_hosts": ["evo-stg.hablas.chat", "evo-api-stg.hablas.chat"],
     "retired_host_policy": "DELETE_AFTER_OBSERVATION_WINDOW",
     "tunnel": {
       "mode": "CLOUDFLARE_TUNNEL_REPLACES_ORIGIN_A_RECORD",
       "name": "hablas-evo-production",
-      "id": null,
-      "ingress_target": "http://hablas-evo-production-gateway:80",
-      "origin_ports_closed": false,
+      "id": "c80e7f74-f0b4-4ead-bc48-ba5f98bf403a",
+      "ingress_target": "http://hablas-evo-production-gateway-kp3njjr4qdr2wetlr518ud2y:3030",
+      "origin_ports_closed": true,
       "replicas": 2,
-      "status": "AUTHORIZED_PENDING_WRITE"
+      "status": "RUNNING_TWO_CONNECTORS"
     }
   },
   "cutover": {
@@ -49,7 +52,7 @@
     "remote_changes_authorized": true,
     "gate_a_local_status": "LOCAL_VALIDATION_COMPLETE_REMOTE_EXECUTION_AUTHORIZED",
     "rename_scope": "FULL_PHYSICAL_RENAME_STAGING_TO_PRODUCTION",
-    "rename_status": "PHASE_3_SUPABASE_COMPLETE",
+    "rename_status": "PRODUCTION_CUTOVER_COMPLETE_AUTH_LOGOUT_FIX_PENDING",
     "backup_restore_rehearsal": "OWNER_WAIVED_FOR_EXPLICIT_DATA_DISPOSAL",
     "backup_restore_attested_at": "2026-09-12",
     "backup_restore_attested_by": "owner",
@@ -91,7 +94,7 @@
     "image_prefix": "hablas-evo-production",
     "image_prefix_previous": "hablas-evo-staging",
     "rename_method": "REBUILD_AND_PUBLISH_UNDER_NEW_PACKAGE_NAMES",
-    "status": "AUTHORIZED_PENDING_WRITE"
+    "status": "PRODUCTION_PACKAGES_PUBLISHED_DIGEST_PINNED"
   },
   "supabase": {
     "status": "PRODUCTION_ROLES_AND_EVOFLOW_SCHEMA_TLS_VERIFIED",
@@ -99,7 +102,7 @@
     "project_identity_status": "VERIFIED_PROJECT_URL_AND_DASHBOARD",
     "project_name": "hablas-evo-production",
     "project_name_previous": "hablas-evo-staging",
-    "project_rename_status": "AUTHORIZED_PENDING_WRITE",
+    "project_rename_status": "PRODUCTION_NAME_VERIFIED",
     "organization_name": "Hablas",
     "organization_id": "hnaujighizgevlmtkycw",
     "region": "us-east-1",
@@ -141,7 +144,7 @@
     "connection_secret_refs": ["local-file:.ops-private/secrets/znxlfqctnezrropcbftw-admin.password"]
   },
   "evolution_go": {
-    "status": "RUNNING_LICENSE_ACTIVE_CRM_CONFIGURED",
+    "status": "RUNNING_LICENSE_ACTIVE_PRODUCTION_AND_STAGING_CONFIGURED_SHARED_SECRET_ROTATION_REQUIRED",
     "public_origin": "https://evo-go.hablas.chat",
     "coolify_resource_uuid": "aoe9kzqf3xvewjimf7czhicv",
     "coolify_status": "RUNNING",
@@ -162,11 +165,13 @@
     "users_database_pool_port": 5432,
     "crm_resource_uuid": "j5tqzqszm8di0pxs8vswon24",
     "crm_integration_status": "RUNTIME_ENV_VERIFIED",
-    "verified_at": "2026-09-11T02:49:43Z"
+    "production_crm_resource_uuid": "kp3njjr4qdr2wetlr518ud2y",
+    "production_integration_status": "RUNTIME_ENV_CONFIGURED_POST_ROTATION_SMOKE_PENDING",
+    "verified_at": "2026-09-13T02:46:00Z"
   },
   "verification": {
-    "observed_at": "2026-09-10T09:58:00Z",
-    "method": "authenticated_browser_and_verified_tls_postgresql_login",
+    "observed_at": "2026-09-13T02:46:00Z",
+    "method": "authenticated_browser_public_smoke_and_verified_tls_postgresql_login",
     "baseline": "docs/existing-environment-baseline.md",
     "revalidate_before_every_remote_write": true
   },

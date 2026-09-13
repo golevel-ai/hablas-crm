@@ -48,7 +48,7 @@ async function main() {
     await runner.query('ROLLBACK');
     if (row.role !== 'hablas_evo_prod_flow' || row.schema !== 'hablas_evoflow_production'
         || row.schema_oid !== manifest.supabase.evoflow.schema_oid || row.can_ddl
-        || row.can_read_supabase_auth || row.can_read_migration_metadata || row.can_change_migrations
+        || row.can_read_supabase_auth || !row.can_read_migration_metadata || row.can_change_migrations
         || !row.can_select || !row.can_insert || !row.can_update || !row.can_delete) throw new Error('PRIVILEGES');
     console.log(JSON.stringify({ status: 'PASS', scope: 'actual Supabase runtime role via verified TLS', ...row }, null, 2));
   } finally {
